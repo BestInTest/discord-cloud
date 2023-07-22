@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import yo.men.discordcloud.gui.FileExplorerGUI;
 import yo.men.discordcloud.gui.Settings;
 import yo.men.discordcloud.gui.SettingsGUI;
+import yo.men.discordcloud.gui.StartGUI;
 import yo.men.discordcloud.utils.FileHelper;
 
 import javax.swing.*;
@@ -16,6 +17,7 @@ public class Main {
     public static final String STORAGE_DIR = "storage/";
     private static Settings settings;
     private static FileExplorerGUI explorerGUI;
+    private static StartGUI startGUI;
 
     public static void main(String[] args) {
 
@@ -38,7 +40,8 @@ public class Main {
                 File cache = new File(".temp/");
                 FileHelper.deleteDirectory(cache);
             }
-            showFileExplorerGUI("storage/");
+            //showFileExplorerGUI("storage/");
+            showStartGUI();
         } else {
             // Jeśli plik settings.json nie istnieje, wyświetl GUI ustawień
             System.out.println("Plik ustawień nie istnieje.");
@@ -55,6 +58,16 @@ public class Main {
             explorerGUI = new FileExplorerGUI();
             explorerGUI.setVisible(true);
             explorerGUI.displayFilesAndDirectories(path);
+        });
+    }
+
+    public static void showStartGUI() {
+        if (startGUI != null) {
+            startGUI.setVisible(false);
+        }
+        SwingUtilities.invokeLater(() -> {
+            startGUI = new StartGUI();
+            startGUI.setVisible(true);
         });
     }
 
