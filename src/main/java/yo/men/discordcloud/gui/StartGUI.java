@@ -37,14 +37,17 @@ public class StartGUI extends JFrame {
         downloadButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try (WebHookManager fm = new WebHookManager(Main.MAX_FILE_SIZE)) {
-                    DiscordFileStruct f = FileHelper.loadStructureFile(openFileSelectionGUI());
-                    fm.downloadFile(f);
+                File fileToOpen = openFileSelectionGUI("*.json");
+                if (fileToOpen != null) {
+                    try (WebHookManager fm = new WebHookManager(Main.MAX_FILE_SIZE)) {
+                        DiscordFileStruct f = FileHelper.loadStructureFile(fileToOpen);
+                        fm.downloadFile(f);
 
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(StartGUI.this,
-                            "Wystąpił błąd podczs ładowania pliku. Upewnij się czy wybrałeś poprawny plik. \nSzczegóły błędu: \n" + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(StartGUI.this,
+                                "Wystąpił błąd podczs ładowania pliku. Upewnij się czy wybrałeś poprawny plik. \nSzczegóły błędu: \n" + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
         });
@@ -63,10 +66,15 @@ public class StartGUI extends JFrame {
                         return;
                     }
                 }
-                try (WebHookManager fm = new WebHookManager(settings.getWebhookUrl(), Main.MAX_FILE_SIZE);) {
-                    fm.sendFile(openFileSelectionGUI());
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
+                File fileToUpload = openFileSelectionGUI(null);
+                if (fileToUpload != null) {
+                    try (WebHookManager fm = new WebHookManager(settings.getWebhookUrl(), Main.MAX_FILE_SIZE);) {
+                        fm.sendFile(fileToUpload);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(StartGUI.this,
+                                "Wystąpił błąd nieoczekiwany błąd. \nSzczegóły błędu: \n" + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
         });
@@ -80,11 +88,13 @@ public class StartGUI extends JFrame {
         container.add(uploadButton);
     }
 
-    private File openFileSelectionGUI() {
+    private File openFileSelectionGUI(String extensionFilter) {
         File toRet = null;
         FileDialog fd = new FileDialog(StartGUI.this, "Choose file to download", FileDialog.LOAD);
         fd.setDirectory("");
-        fd.setFile("*.json"); // może zamiast tego zrobić FileNameFilter bo *może* to powodować wielokrotny wybór
+        if (extensionFilter != null) {
+            fd.setFile(extensionFilter); // może zamiast tego zrobić FileNameFilter bo *może* to powodować wielokrotny wybór
+        }
         fd.setVisible(true);
         File[] selectedFiles = fd.getFiles();
         if (selectedFiles.length == 1) {

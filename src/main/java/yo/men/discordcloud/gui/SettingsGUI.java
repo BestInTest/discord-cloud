@@ -78,8 +78,9 @@ public class SettingsGUI extends JDialog {
         FileWriter fileWriter = new FileWriter(settingsFilePath);
         fileWriter.write(json);
         fileWriter.close();
+        Main.loadSettings();
+        System.out.println(Main.getSettings());
         JOptionPane.showMessageDialog(this, "Ustawienia zostały zapisane.", "Informacja", JOptionPane.INFORMATION_MESSAGE);
-        //Main.main(null); // Główne gui powinno się zamknąć i otworzyć na nowo
         setVisible(false); // Zamykanie ustawień
     }
 }

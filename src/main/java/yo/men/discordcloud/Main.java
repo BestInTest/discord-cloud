@@ -23,7 +23,7 @@ public class Main {
     public static void main(String[] args) {
         //todo 2: sprawdzać czy plik juz istnieje
 
-        settings = loadSettings(); // Będzie null jeżeli plik nie będzie istniał
+        loadSettings(); // settings będzie nullem jeżeli plik ustawień nie będzie istniał
 
         if (settings != null && settings.isClearCache()) {
             System.out.println("Czyszczenie cache");
@@ -67,21 +67,23 @@ public class Main {
         return explorerGUI;
     }
 
-    private static Settings loadSettings() {
+    public static void loadSettings() {
         File settingsFile = new File("settings.json");
 
         try (Reader reader = new FileReader(settingsFile)) {
             Gson gson = new Gson();
             Settings settings = gson.fromJson(reader, Settings.class);
             if (settings != null) {
-                return settings;
+                Main.settings = settings;
+                return;
             }
         } catch (FileNotFoundException e) {
-            return null;
+            Main.settings = null;
+            return;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+        Main.settings = null;
     }
 
 }
