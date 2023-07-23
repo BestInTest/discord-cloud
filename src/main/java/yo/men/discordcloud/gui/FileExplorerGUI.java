@@ -1,8 +1,8 @@
 package yo.men.discordcloud.gui;
 
 import yo.men.discordcloud.Main;
-import yo.men.discordcloud.structure.DiscordFile;
-import yo.men.discordcloud.structure.FileManager;
+import yo.men.discordcloud.structure.DiscordFileStruct;
+import yo.men.discordcloud.structure.WebHookManager;
 import yo.men.discordcloud.utils.FileHelper;
 
 import javax.swing.*;
@@ -74,7 +74,7 @@ public class FileExplorerGUI extends JFrame {
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
                 Settings settings = Main.getSettings();
-                FileManager uploader = new FileManager(settings.getWebhookUrl(), Main.MAX_FILE_SIZE);
+                WebHookManager uploader = new WebHookManager(settings.getWebhookUrl(), Main.MAX_FILE_SIZE);
                 Thread uploadThread = new Thread(() -> {
                     try {
                         uploader.sendFile(selectedFile);
@@ -94,12 +94,12 @@ public class FileExplorerGUI extends JFrame {
         downloadButton.addActionListener(e -> {
             // Implementacja logiki przycisku Download
             Settings settings = Main.getSettings();
-            FileManager downloader = new FileManager(settings.getWebhookUrl(), Main.MAX_FILE_SIZE);
+            WebHookManager downloader = new WebHookManager(settings.getWebhookUrl(), Main.MAX_FILE_SIZE);
             Thread downloadThread = new Thread(() -> {
                 try {
                     int index = fileList.getSelectedIndex();
                     File selectedFile = listModel.getElementAt(index);
-                    DiscordFile f = FileHelper.loadStructureFile(selectedFile);
+                    DiscordFileStruct f = FileHelper.loadStructureFile(selectedFile);
                     downloader.downloadFile(f);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Wystąpił błąd: " + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
@@ -121,7 +121,7 @@ public class FileExplorerGUI extends JFrame {
         settingsButton.addActionListener(e -> {
             // Implementacja logiki przycisku ustawień
             //FIXME: po otwarciu ustawień cały czas można klikać przyciski okna głównego
-            Main.showSettingsGUI(false);
+            //Main.showSettingsGUI(false);
         });
 
     }

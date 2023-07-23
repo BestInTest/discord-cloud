@@ -8,6 +8,7 @@ import yo.men.discordcloud.gui.StartGUI;
 import yo.men.discordcloud.utils.FileHelper;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 
 
@@ -20,34 +21,17 @@ public class Main {
     private static StartGUI startGUI;
 
     public static void main(String[] args) {
-
-        /*
-        todo 1:
-          Zrobić żeby FileExplorerGUI otwierał folder "storage" i tam można by było zarządzać plikami
-          i folderami oraz wysyłać nowe pliki je.
-          Ewentualnie zmienić aby było menu do wybrania czy wysyłać albo pobierać
-        */
         //todo 2: sprawdzać czy plik juz istnieje
 
-        File settingsFile = new File("settings.json");
+        settings = loadSettings(); // Będzie null jeżeli plik nie będzie istniał
 
-        if (settingsFile.exists()) {
-            settings = loadSettings();
-            // Jeśli plik settings.json istnieje, otwórz program bez GUI ustawień
-            System.out.println("Plik ustawień istnieje.");
-            if (settings.isClearCache()) {
-                System.out.println("Czyszczenie cache");
-                File cache = new File(".temp/");
-                FileHelper.deleteDirectory(cache);
-            }
-            //showFileExplorerGUI("storage/");
-            showStartGUI();
-        } else {
-            // Jeśli plik settings.json nie istnieje, wyświetl GUI ustawień
-            System.out.println("Plik ustawień nie istnieje.");
-            showSettingsGUI(true);
+        if (settings != null && settings.isClearCache()) {
+            System.out.println("Czyszczenie cache");
+            File cache = new File(".temp/");
+            FileHelper.deleteDirectory(cache);
         }
 
+        showStartGUI();
     }
 
     public static void showFileExplorerGUI(String path) {
@@ -71,13 +55,8 @@ public class Main {
         });
     }
 
-    public static void showSettingsGUI(boolean startAfterExit) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new SettingsGUI(startAfterExit);
-            }
-        });
+    public static void showSettingsGUI(Frame parent, boolean isModal) throws IOException {
+        new SettingsGUI(parent, isModal);
     }
 
     public static Settings getSettings() {
@@ -97,8 +76,7 @@ public class Main {
             if (settings != null) {
                 return settings;
             }
-        } catch (FileNotFoundException e) { //Struktura jeszcze nie istnieje, - wysyłanie pierwszego kawałka
-            //Tworzenie nowej struktury pliku
+        } catch (FileNotFoundException e) {
             return null;
         } catch (IOException e) {
             e.printStackTrace();

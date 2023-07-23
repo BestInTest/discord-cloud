@@ -13,12 +13,19 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileManager {
+public class WebHookManager implements AutoCloseable {
 
     private final String UPLOAD_WEBHOOK_URL;
     public final int MAX_FILE_SIZE;
 
-    public FileManager(String webhookUrl, int maxPartSize) {
+    //Brak obsługi wysyłania plików, stosowane tylko do ich pobierania
+    public WebHookManager(int maxPartSize) {
+        UPLOAD_WEBHOOK_URL = null;
+        MAX_FILE_SIZE = maxPartSize;
+    }
+
+    //Posiada obsługę pobierania i wysyłania plików
+    public WebHookManager(String webhookUrl, int maxPartSize) {
         UPLOAD_WEBHOOK_URL = webhookUrl;
         MAX_FILE_SIZE = maxPartSize;
     }
@@ -59,6 +66,7 @@ public class FileManager {
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
+                //mysle ze ten kod mozna dac poza blok finally
                 if (success) {
                     if (discordResponse != null && discordResponse.getAttachments() != null && !discordResponse.getAttachments().isEmpty()) {
                         DiscordAttachment attachment = discordResponse.getAttachments().get(0);
@@ -83,9 +91,9 @@ public class FileManager {
     }
 
     private void saveUploadedFile(File partFile, File originalFile, String messageId, String url, boolean isSuccess) {
-        DiscordFile structure = FileHelper.loadStructureFile(new File(Main.STORAGE_DIR + originalFile.getName() + ".json")); //fixme: jest taki problem, że ścieżka originalFile nie prowadzi do storage/plik.xx.json tylko do jego głównej lokacji
+        DiscordFileStruct structure = FileHelper.loadStructureFile(new File(Main.STORAGE_DIR + originalFile.getName() + ".json")); //fixme: jest taki problem, że ścieżka originalFile nie prowadzi do storage/plik.xx.json tylko do jego głównej lokacji
         if (structure == null) {
-            structure = new DiscordFile(originalFile.getAbsolutePath(), FileHashCalculator.getFileHash(originalFile), new ArrayList<>());;
+            structure = new DiscordFileStruct(originalFile.getAbsolutePath(), FileHashCalculator.getFileHash(originalFile), new ArrayList<>());;
         }
         System.out.println(originalFile);
         List<DiscordFilePart> uploadedFiles = structure.getParts();
@@ -97,7 +105,7 @@ public class FileManager {
         System.out.println(uploadedFiles);
     }
 
-    private void saveStructure(DiscordFile structure, List<DiscordFilePart> uploadedFiles) {
+    private void saveStructure(DiscordFileStruct structure, List<DiscordFilePart> uploadedFiles) {
         structure.setParts(uploadedFiles);
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -110,7 +118,7 @@ public class FileManager {
         }
     }
 
-    public boolean downloadFile(DiscordFile structure) {
+    public boolean downloadFile(DiscordFileStruct structure) throws IOException {
         if (structure != null) {
             //long partsCount = FileHelper.calculateMaxPartCount(structure.getFixedFilePath());
             long partsCount = structure.getParts().size();
@@ -151,32 +159,35 @@ public class FileManager {
                 //todo: progress bar - trzeba zrobić oddzielny do pobierania (bo są dwa procesy: download i łączenie)
             }
             System.out.println("Pobrano pliki. Łączenie...");
-            try {
-                System.out.println(structure.getOriginalName());
-                File finalFile = new File("downloads/");
-                finalFile.mkdirs(); // tworzenie folderu na pobrany plik
-                finalFile = new File("downloads/" + structure.getOriginalName()); // docelowy plik
-                FileMerger.mergeFiles(downloadDir, finalFile);
-                System.out.println("Plik został poprawnie połączony");
-                System.out.println("Sprawdzanie sumy kontrolnej...");
 
-                System.out.println(finalFile);
-                String hash = FileHashCalculator.getFileHash(finalFile);
+            System.out.println(structure.getOriginalName());
+            File finalFile = new File("downloads/");
+            finalFile.mkdirs(); // tworzenie folderu na pobrany plik
+            finalFile = new File("downloads/" + structure.getOriginalName()); // docelowy plik
+            FileMerger.mergeFiles(downloadDir, finalFile);
+            System.out.println("Plik został poprawnie połączony");
+            System.out.println("Sprawdzanie sumy kontrolnej...");
 
-                if (hash.equals(structure.getSha256Hash())) {
-                    System.out.println("Plik został poprawnie pobrany");
-                    if (progressGUI.incrementProgress()) { // Sprawdzanie, czy zadanie zostało w całości zakończone
-                        return true;
-                    }
-                } else {
-                    System.out.println("Sumy kontrolne są różne:");
-                    System.out.println("Structure SHA256: " + structure.getSha256Hash());
-                    System.out.println("Downloaded file SHA256: " + hash);
+            System.out.println(finalFile);
+            String hash = FileHashCalculator.getFileHash(finalFile);
+
+            if (hash.equals(structure.getSha256Hash())) {
+                System.out.println("Plik został poprawnie pobrany");
+                if (progressGUI.incrementProgress()) { // Sprawdzanie, czy zadanie zostało w całości zakończone
+                    return true;
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            } else {
+                System.out.println("Sumy kontrolne są różne:");
+                System.out.println("Structure SHA256: " + structure.getSha256Hash());
+                System.out.println("Downloaded file SHA256: " + hash);
             }
+
         }
         return false; // Nie można było ukończyć zadania
+    }
+
+    @Override
+    public void close() {
+        System.out.println("Closing WebHookManager");
     }
 }

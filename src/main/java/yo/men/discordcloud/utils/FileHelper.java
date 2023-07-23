@@ -2,10 +2,9 @@ package yo.men.discordcloud.utils;
 
 import com.google.gson.Gson;
 import yo.men.discordcloud.Main;
-import yo.men.discordcloud.structure.DiscordFile;
+import yo.men.discordcloud.structure.DiscordFileStruct;
 
 import java.io.*;
-import java.util.ArrayList;
 
 public class FileHelper {
 
@@ -89,14 +88,14 @@ public class FileHelper {
         return filename.substring(0, extensionIndex);
     }
 
-    public static DiscordFile loadStructureFile(File file) {
-        DiscordFile f = null;
+    public static DiscordFileStruct loadStructureFile(File file) {
+        DiscordFileStruct f = null;
         System.out.println("loading file " + file.getAbsolutePath());
 
         File structureFile = FileHelper.toStructureFile(file); //structureFile w moim rozumieniu to json z danymi o kawałkach pliku itp
         try (Reader reader = new FileReader(structureFile)) {
             Gson gson = new Gson();
-            DiscordFile dscFile = gson.fromJson(reader, DiscordFile.class);
+            DiscordFileStruct dscFile = gson.fromJson(reader, DiscordFileStruct.class);
             if (dscFile != null) {
                 f = dscFile;
             }

@@ -11,17 +11,17 @@ import java.awt.event.ActionListener;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class SettingsGUI extends JFrame {
+public class SettingsGUI extends JDialog {
     private JCheckBox clearCacheCheckBox;
     private JTextField webhookUrlField;
     private JButton saveButton;
 
-    public SettingsGUI(boolean startAfterExit) {
-
+    public SettingsGUI(Frame parent, boolean isModal) throws IOException {
+        super(parent, isModal);
         setTitle("Ustawienia");
-        if (startAfterExit) { // Dla pierwszego uruchomienia, kiedy główne gui jest ukryte (zamknięcie ustawień będzie zamykać program)
-            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        }
+        //if (startAfterExit) { // Dla pierwszego uruchomienia, kiedy główne gui jest ukryte (zamknięcie ustawień będzie zamykać program)
+        //    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //}
         setPreferredSize(new Dimension(400, 140));
         setLayout(new BorderLayout());
 
@@ -49,7 +49,11 @@ public class SettingsGUI extends JFrame {
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                saveSettings();
+                try {
+                    saveSettings();
+                } catch (IOException ex) {
+                    throw new RuntimeException();
+                }
             }
         });
 
@@ -61,7 +65,7 @@ public class SettingsGUI extends JFrame {
         setVisible(true);
     }
 
-    private void saveSettings() {
+    private void saveSettings() throws IOException {
         String settingsFilePath = "settings.json";
 
         Settings settings = new Settings();
@@ -71,15 +75,11 @@ public class SettingsGUI extends JFrame {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String json = gson.toJson(settings);
 
-        try (FileWriter fileWriter = new FileWriter(settingsFilePath)) {
-            fileWriter.write(json);
-            fileWriter.close();
-            JOptionPane.showMessageDialog(this, "Ustawienia zostały zapisane.", "Informacja", JOptionPane.INFORMATION_MESSAGE);
-            Main.main(null); // Główne gui powinno się zamknąć i otworzyć na nowo
-            setVisible(false); // Zamykanie ustawień
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Błąd podczas zapisywania ustawień.", "Błąd", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
-        }
+        FileWriter fileWriter = new FileWriter(settingsFilePath);
+        fileWriter.write(json);
+        fileWriter.close();
+        JOptionPane.showMessageDialog(this, "Ustawienia zostały zapisane.", "Informacja", JOptionPane.INFORMATION_MESSAGE);
+        //Main.main(null); // Główne gui powinno się zamknąć i otworzyć na nowo
+        setVisible(false); // Zamykanie ustawień
     }
 }

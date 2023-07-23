@@ -1,12 +1,11 @@
 package yo.men.discordcloud.structure;
 
 import yo.men.discordcloud.Main;
-import yo.men.discordcloud.utils.FileHelper;
 
 import java.io.File;
 import java.util.List;
 
-public class DiscordFile {
+public class DiscordFileStruct {
     private final String originalName; //nazwa pliku
     //TODO: fileSize (pełna waga pliku, może w bajtach?) - pozwoli to później na łatwe pokazywanie wielkości pliku w gui
     private final long fileSize;
@@ -14,7 +13,7 @@ public class DiscordFile {
     private final String sha256Hash; // hash pełnego pliku
     private List<DiscordFilePart> parts;
 
-    public DiscordFile(String structureFilePath, String hash, List<DiscordFilePart> parts) {
+    public DiscordFileStruct(String structureFilePath, String hash, List<DiscordFilePart> parts) {
         File f = new File(structureFilePath);
         this.originalName = f.getName();
         this.fileSize = f.length();
