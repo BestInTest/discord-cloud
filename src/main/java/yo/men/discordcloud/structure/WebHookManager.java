@@ -3,16 +3,13 @@ package yo.men.discordcloud.structure;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import okhttp3.*;
-import yo.men.discordcloud.Main;
 import yo.men.discordcloud.gui.ProgressGUI;
 import yo.men.discordcloud.utils.FileHashCalculator;
 import yo.men.discordcloud.utils.FileHelper;
 import yo.men.discordcloud.utils.FileMerger;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
 public class WebHookManager implements AutoCloseable {
 
@@ -92,7 +89,7 @@ public class WebHookManager implements AutoCloseable {
     }
 
     private void saveUploadedFile(File partFile, File originalFile, String messageId, String url, boolean isSuccess) {
-        DiscordFileStruct structure = FileHelper.loadStructureFile(new File(Main.STORAGE_DIR + originalFile.getName() + ".json")); //fixme: jest taki problem, że ścieżka originalFile nie prowadzi do storage/plik.xx.json tylko do jego głównej lokacji
+        DiscordFileStruct structure = FileHelper.loadStructureFile(new File(originalFile.getName() + ".json")); //fixme: jest taki problem, że ścieżka originalFile nie prowadzi do storage/plik.xx.json tylko do jego głównej lokacji
         if (structure == null) {
             structure = new DiscordFileStruct(originalFile.getAbsolutePath(), FileHashCalculator.getFileHash(originalFile), new LinkedList<>());
         }
@@ -112,7 +109,8 @@ public class WebHookManager implements AutoCloseable {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String json = gson.toJson(structure);
 
-        try (Writer writer = new FileWriter(structure.getOriginalName())) {
+        File targetStructFile = new File(structure.getOriginalFileName() + ".json");
+        try (Writer writer = new FileWriter(targetStructFile)) {
             writer.write(json);
         } catch (IOException e) {
             e.printStackTrace();
@@ -128,7 +126,7 @@ public class WebHookManager implements AutoCloseable {
             ProgressGUI progressGUI = new ProgressGUI(partsCount);
 
             OkHttpClient client = new OkHttpClient();
-            final String downloadDir = ".temp/downloads/" + structure.getOriginalName() + "/";
+            final String downloadDir = ".temp/downloads/" + structure.getOriginalFileName() + "/";
             System.out.println(structure.getParts().size());
 
             for (DiscordFilePart part : structure.getParts()) {
@@ -161,10 +159,9 @@ public class WebHookManager implements AutoCloseable {
             }
             System.out.println("Pobrano pliki. Łączenie...");
 
-            System.out.println(structure.getOriginalName());
             File finalFile = new File("downloads/");
             finalFile.mkdirs(); // tworzenie folderu na pobrany plik
-            finalFile = new File("downloads/" + structure.getOriginalName()); // docelowy plik
+            finalFile = new File("downloads/" + structure.getOriginalFileName()); // docelowy plik
             FileMerger.mergeFiles(downloadDir, finalFile);
             System.out.println("Plik został poprawnie połączony");
             System.out.println("Sprawdzanie sumy kontrolnej...");
