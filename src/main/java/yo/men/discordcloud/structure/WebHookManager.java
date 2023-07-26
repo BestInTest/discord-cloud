@@ -3,8 +3,8 @@ package yo.men.discordcloud.structure;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import okhttp3.*;
+import yo.men.discordcloud.Main;
 import yo.men.discordcloud.gui.ProgressGUI;
-import yo.men.discordcloud.gui.StartGUI;
 import yo.men.discordcloud.utils.FileHashCalculator;
 import yo.men.discordcloud.utils.FileHelper;
 import yo.men.discordcloud.utils.FileMerger;
@@ -17,6 +17,8 @@ public class WebHookManager {
 
     private final String UPLOAD_WEBHOOK_URL;
     public final int MAX_FILE_SIZE;
+
+    private Thread runningThread;
 
     //Brak obsługi wysyłania plików, stosowane tylko do ich pobierania
     public WebHookManager(int maxPartSize) {
@@ -36,7 +38,12 @@ public class WebHookManager {
         ProgressGUI progressGUI = new ProgressGUI(partsCount);
         OkHttpClient client = new OkHttpClient();
 
-        Thread uploadThread = new Thread(new Runnable() {
+        if (runningThread != null) {
+            JOptionPane.showMessageDialog(null,
+                    "Wystąpił nieoczekiwany błąd. \nSzczegóły błędu: Thread is already running!", "Błąd", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        runningThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -85,7 +92,7 @@ public class WebHookManager {
                                     }
                                 } else {
                                     JOptionPane.showMessageDialog(null,
-                                            "Wystąpił błąd nieoczekiwany błąd. \nSzczegóły błędu: Invalid Discord response!", "Błąd", JOptionPane.ERROR_MESSAGE);
+                                            "Wystąpił nieoczekiwany błąd. \nSzczegóły błędu: Invalid Discord response!", "Błąd", JOptionPane.ERROR_MESSAGE);
                                     throw new RuntimeException("Invalid Discord response!");
                                 }
                             } else {
@@ -97,11 +104,11 @@ public class WebHookManager {
                     e.printStackTrace();
                     //todo jeżeli potrzeba będzie zmieniać parenty to może zrobić je pod ProgressGUI
                     JOptionPane.showMessageDialog(null,
-                            "Wystąpił błąd nieoczekiwany błąd. \nSzczegóły błędu: \n" + e.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+                            "Wystąpił nieoczekiwany błąd. \nSzczegóły błędu: \n" + e.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
-        uploadThread.start();
+        runningThread.start();
 
         return false; // Nie można było ukończyć zadania
     }
@@ -143,7 +150,12 @@ public class WebHookManager {
             final String downloadDir = ".temp/downloads/" + structure.getOriginalFileName() + "/";
             System.out.println(structure.getParts().size());
 
-            Thread downloadThread = new Thread(new Runnable() {
+            if (runningThread != null) {
+                JOptionPane.showMessageDialog(null,
+                        "Wystąpił nieoczekiwany błąd. \nSzczegóły błędu: Thread is already running!", "Błąd", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+            runningThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     for (DiscordFilePart part : structure.getParts()) {
@@ -190,7 +202,7 @@ public class WebHookManager {
                         if (hash.equals(structure.getSha256Hash())) {
                             System.out.println("Plik został poprawnie pobrany");
                             if (progressGUI.incrementProgress()) { // Sprawdzanie, czy zadanie zostało w całości zakończone
-                                //return true;
+                                progressGUI.dispose();
                             }
                         } else {
                             System.out.println("Sumy kontrolne są różne:");
@@ -198,6 +210,7 @@ public class WebHookManager {
                             System.out.println("Downloaded file SHA256: " + hash);
                             JOptionPane.showMessageDialog(null, //todo może zrobić jednak z parentem?
                                     "Podczas łączenia plików wystąpił błąd. \nSzczegóły błędu: sumy kontrolne są różne", "Błąd", JOptionPane.ERROR_MESSAGE);
+                            progressGUI.dispose();
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -205,9 +218,10 @@ public class WebHookManager {
                                 "Podczas łączenia plików wystąpił błąd. \nSzczegóły błędu: \n" + e.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
                         progressGUI.dispose();
                     }
+                    Main.getStartGUI().setVisible(true); // pokazywanie głównego okna po zakończeniu operacji
                 }
             });
-            downloadThread.start();
+            runningThread.start();
 
         }
         return false; // Nie można było ukończyć zadania

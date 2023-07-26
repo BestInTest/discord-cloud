@@ -7,6 +7,7 @@ import java.util.LinkedList;
 
 public class DiscordFileStruct {
 
+    //todo: fileVersion
     private final String originalFileName; //nazwa pliku
     //TODO: fileSize (pełna waga pliku, może w bajtach?) - pozwoli to później na łatwe pokazywanie wielkości pliku w gui
     private final long fileSize;

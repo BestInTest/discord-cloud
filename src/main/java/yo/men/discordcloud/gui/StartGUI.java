@@ -14,9 +14,6 @@ import java.io.IOException;
 
 public class StartGUI extends JFrame {
 
-    private JButton downloadButton;
-    private JButton uploadButton;
-
     public StartGUI() {
         // Ustawienia okna
         setTitle("Discord Cloud");
@@ -25,8 +22,8 @@ public class StartGUI extends JFrame {
         setLocationRelativeTo(null);
 
         // Utworzenie przycisków
-        downloadButton = new JButton("Download");
-        uploadButton = new JButton("Upload");
+        JButton downloadButton = new JButton("Download");
+        JButton uploadButton = new JButton("Upload");
 
         // Ustawienie większej czcionki dla napisów na przyciskach
         Font largerFont = new Font(downloadButton.getFont().getName(), Font.PLAIN, 18);
@@ -75,7 +72,7 @@ public class StartGUI extends JFrame {
                     } catch (IOException ex) {
                         ex.printStackTrace();
                         JOptionPane.showMessageDialog(StartGUI.this,
-                                "Wystąpił błąd nieoczekiwany błąd. \nSzczegóły błędu: \n" + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+                                "Wystąpił nieoczekiwany błąd. \nSzczegóły błędu: \n" + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
@@ -92,7 +89,7 @@ public class StartGUI extends JFrame {
 
     private File openFileSelectionGUI(String extensionFilter) {
         File toRet = null;
-        FileDialog fd = new FileDialog(StartGUI.this, "Choose file to download", FileDialog.LOAD);
+        FileDialog fd = new FileDialog(StartGUI.this, "Choose file", FileDialog.LOAD);
         fd.setDirectory("");
         if (extensionFilter != null) {
             fd.setFile(extensionFilter); // może zamiast tego zrobić FileNameFilter bo *może* to powodować wielokrotny wybór

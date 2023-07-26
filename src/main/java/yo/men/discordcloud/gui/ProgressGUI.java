@@ -1,5 +1,7 @@
 package yo.men.discordcloud.gui;
 
+import yo.men.discordcloud.Main;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
@@ -44,6 +46,7 @@ public class ProgressGUI extends JDialog {
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
+        Main.getStartGUI().setVisible(false); // ukrywanie menu głównego do czasu zakończenia operacji
     }
 
     // Jeżeli proces się zakończy, zwróci "true".
@@ -56,8 +59,6 @@ public class ProgressGUI extends JDialog {
 
         if (progress >= progressBar.getMaximum()) {
             JOptionPane.showMessageDialog(this, "Wysyłanie/Pobieranie zakończone.", "Sukces", JOptionPane.INFORMATION_MESSAGE);
-            //setVisible(false);
-            dispose();
             return true;
         }
         return false;

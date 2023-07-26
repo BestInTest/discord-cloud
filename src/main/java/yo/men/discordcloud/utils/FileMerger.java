@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 public class FileMerger {
+    //fixme: przy duzych plikach (duza ilosc kawalkow) plik jest zle skladany
     public static void mergeFiles(String folderPath, File outputFile) throws IOException {
         File folder = new File(folderPath);
         File[] partFiles = folder.listFiles((dir, name) -> name.matches(".+\\.part\\d+"));
