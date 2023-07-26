@@ -88,14 +88,17 @@ public class WebHookManager {
                                     partFile.delete(); // usuwanie pliku tymczasowego
 
                                     if (progressGUI.incrementProgress()) { // Sprawdzanie, czy zadanie zostało w całości zakończone
-                                        //return true;
+                                        progressGUI.dispose();
                                     }
                                 } else {
+                                    //nie wiem czy tutaj dawać progressGUI.dispose();
                                     JOptionPane.showMessageDialog(null,
                                             "Wystąpił nieoczekiwany błąd. \nSzczegóły błędu: Invalid Discord response!", "Błąd", JOptionPane.ERROR_MESSAGE);
                                     throw new RuntimeException("Invalid Discord response!");
                                 }
                             } else {
+                                //todo dodać okienko o błędzie
+                                //todo ponowana próba wysyłania pliku lub zapytanie czy przerwać lub ponowić
                                 System.err.println("Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + " (HTTP code: " + responseCode + ")");
                             }
                         }
@@ -105,7 +108,9 @@ public class WebHookManager {
                     //todo jeżeli potrzeba będzie zmieniać parenty to może zrobić je pod ProgressGUI
                     JOptionPane.showMessageDialog(null,
                             "Wystąpił nieoczekiwany błąd. \nSzczegóły błędu: \n" + e.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+                    progressGUI.dispose();
                 }
+                Main.getStartGUI().setVisible(true); // pokazywanie głównego okna po zakończeniu operacji
             }
         });
         runningThread.start();
