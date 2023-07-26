@@ -7,7 +7,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-public class ProgressGUI extends JDialog {
+public class ProgressGUI extends JFrame {
 
     private int progress; // liczba przesłanych kawałków
     private JTextField progressTextField; // ilość przesłanych kawałków pliku do ilości wszystkich kawałków (uploaded/all)
@@ -17,6 +17,7 @@ public class ProgressGUI extends JDialog {
         setTitle("Postęp zadania");
         setPreferredSize(new Dimension(400, 100));
         setLayout(new BorderLayout());
+        setResizable(false);
 
         progressBar = new JProgressBar(0, (int) progressMax);
         progressBar.setStringPainted(true);
