@@ -89,18 +89,14 @@ public class WebHookManager implements AutoCloseable {
     }
 
     private void saveUploadedFile(File partFile, File originalFile, String messageId, String url, boolean isSuccess) {
-        DiscordFileStruct structure = FileHelper.loadStructureFile(new File(originalFile.getName() + ".json")); //fixme: jest taki problem, że ścieżka originalFile nie prowadzi do storage/plik.xx.json tylko do jego głównej lokacji
+        DiscordFileStruct structure = FileHelper.loadStructureFile(new File(originalFile.getName() + ".json"));
         if (structure == null) {
             structure = new DiscordFileStruct(originalFile.getAbsolutePath(), FileHashCalculator.getFileHash(originalFile), new LinkedList<>());
         }
-        System.out.println(originalFile);
         LinkedList<DiscordFilePart> uploadedFiles = structure.getParts();
-        System.out.println(uploadedFiles.size());
-        System.out.println("fff " + partFile);
         String hash = FileHashCalculator.getFileHash(partFile);
         uploadedFiles.add(new DiscordFilePart(partFile.getName(), hash, messageId, url, isSuccess));
         saveStructure(structure, uploadedFiles);
-        System.out.println(uploadedFiles);
     }
 
     private void saveStructure(DiscordFileStruct structure, LinkedList<DiscordFilePart> uploadedFiles) {
