@@ -4,14 +4,16 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import okhttp3.*;
 import yo.men.discordcloud.gui.ProgressGUI;
+import yo.men.discordcloud.gui.StartGUI;
 import yo.men.discordcloud.utils.FileHashCalculator;
 import yo.men.discordcloud.utils.FileHelper;
 import yo.men.discordcloud.utils.FileMerger;
 
+import javax.swing.*;
 import java.io.*;
 import java.util.LinkedList;
 
-public class WebHookManager implements AutoCloseable {
+public class WebHookManager {
 
     private final String UPLOAD_WEBHOOK_URL;
     public final int MAX_FILE_SIZE;
@@ -34,57 +36,73 @@ public class WebHookManager implements AutoCloseable {
         ProgressGUI progressGUI = new ProgressGUI(partsCount);
         OkHttpClient client = new OkHttpClient();
 
-        for (int i = 0; i < partsCount; i++) {
-            File partFile = FileHelper.getFilePart(file.getAbsolutePath(), i);
+        Thread uploadThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    for (int i = 0; i < partsCount; i++) {
+                        File partFile = FileHelper.getFilePart(file.getAbsolutePath(), i);
 
-            RequestBody requestBody = new MultipartBody.Builder()
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart("file", partFile.getName(),
-                            RequestBody.create(MediaType.parse("application/octet-stream"), partFile))
-                    .build();
+                        RequestBody requestBody = new MultipartBody.Builder()
+                                .setType(MultipartBody.FORM)
+                                .addFormDataPart("file", partFile.getName(),
+                                        RequestBody.create(MediaType.parse("application/octet-stream"), partFile))
+                                .build();
 
-            Request request = new Request.Builder()
-                    .url(UPLOAD_WEBHOOK_URL)
-                    .post(requestBody)
-                    .build();
+                        Request request = new Request.Builder()
+                                .url(UPLOAD_WEBHOOK_URL)
+                                .post(requestBody)
+                                .build();
 
-            boolean success = false;
-            DiscordResponse discordResponse = null;
-            int responseCode = -1;
-            try (Response response = client.newCall(request).execute()) {
-                responseCode = response.code();
-                if (responseCode == 200 || responseCode == 201) {
-                    success = true;
-                    String responseBody = response.body().string();
-                    Gson gson = new Gson();
-                    discordResponse = gson.fromJson(responseBody, DiscordResponse.class);
+                        boolean success = false;
+                        DiscordResponse discordResponse = null;
+                        int responseCode = -1;
+                        try (Response response = client.newCall(request).execute()) {
+                            responseCode = response.code();
+                            if (responseCode == 200 || responseCode == 201) {
+                                success = true;
+                                String responseBody = response.body().string();
+                                Gson gson = new Gson();
+                                discordResponse = gson.fromJson(responseBody, DiscordResponse.class);
 
-                }
-                //todo obsługa innych kodów
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                //mysle ze ten kod mozna dac poza blok finally
-                if (success) {
-                    if (discordResponse != null && discordResponse.getAttachments() != null && !discordResponse.getAttachments().isEmpty()) {
-                        DiscordAttachment attachment = discordResponse.getAttachments().get(0);
-                        String messageId = discordResponse.getId();
-                        saveUploadedFile(partFile, file, messageId, attachment.getUrl(), success);
-                        System.out.println("Wysłano plik: " + partFile.getName() + " (ID wiadomości: " + messageId + ")");
-                        System.out.println("URL pliku: " + attachment.getUrl());
-                        partFile.delete(); // usuwanie pliku tymczasowego
+                            }
+                            //todo obsługa innych kodów
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } finally {
+                            //mysle ze ten kod mozna dac poza blok finally
+                            if (success) {
+                                if (discordResponse != null && discordResponse.getAttachments() != null && !discordResponse.getAttachments().isEmpty()) {
+                                    DiscordAttachment attachment = discordResponse.getAttachments().get(0);
+                                    String messageId = discordResponse.getId();
+                                    saveUploadedFile(partFile, file, messageId, attachment.getUrl(), success);
+                                    System.out.println("Wysłano plik: " + partFile.getName() + " (ID wiadomości: " + messageId + ")");
+                                    System.out.println("URL pliku: " + attachment.getUrl());
+                                    partFile.delete(); // usuwanie pliku tymczasowego
 
-                        if (progressGUI.incrementProgress()) { // Sprawdzanie, czy zadanie zostało w całości zakończone
-                            return true;
+                                    if (progressGUI.incrementProgress()) { // Sprawdzanie, czy zadanie zostało w całości zakończone
+                                        //return true;
+                                    }
+                                } else {
+                                    JOptionPane.showMessageDialog(null,
+                                            "Wystąpił błąd nieoczekiwany błąd. \nSzczegóły błędu: Invalid Discord response!", "Błąd", JOptionPane.ERROR_MESSAGE);
+                                    throw new RuntimeException("Invalid Discord response!");
+                                }
+                            } else {
+                                System.err.println("Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + " (HTTP code: " + responseCode + ")");
+                            }
                         }
-                    } else {
-                        throw new RuntimeException("Invalid Discord response!");
                     }
-                } else {
-                    System.err.println("Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + " (HTTP code: " + responseCode + ")");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    //todo jeżeli potrzeba będzie zmieniać parenty to może zrobić je pod ProgressGUI
+                    JOptionPane.showMessageDialog(null,
+                            "Wystąpił błąd nieoczekiwany błąd. \nSzczegóły błędu: \n" + e.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
                 }
             }
-        }
+        });
+        uploadThread.start();
+
         return false; // Nie można było ukończyć zadania
     }
 
@@ -113,7 +131,7 @@ public class WebHookManager implements AutoCloseable {
         }
     }
 
-    public boolean downloadFile(DiscordFileStruct structure) throws IOException {
+    public boolean downloadFile(DiscordFileStruct structure) {
         if (structure != null) {
             //long partsCount = FileHelper.calculateMaxPartCount(structure.getFixedFilePath());
             long partsCount = structure.getParts().size();
@@ -125,63 +143,73 @@ public class WebHookManager implements AutoCloseable {
             final String downloadDir = ".temp/downloads/" + structure.getOriginalFileName() + "/";
             System.out.println(structure.getParts().size());
 
-            for (DiscordFilePart part : structure.getParts()) {
-                String downloadUrl = part.getUrl();
+            Thread downloadThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    for (DiscordFilePart part : structure.getParts()) {
+                        String downloadUrl = part.getUrl();
 
-                Request request = new Request.Builder()
-                        .url(downloadUrl)
-                        .get()
-                        .build();
+                        Request request = new Request.Builder()
+                                .url(downloadUrl)
+                                .get()
+                                .build();
 
-                try (Response response = client.newCall(request).execute()) {
-                    File out = new File(downloadDir);
-                    out.mkdirs(); // tworzenie tymczasowego folderu do pobrania plików
-                    out = new File(downloadDir + part.getName()); // zamiana na ścieżkę do pliku
-                    System.out.println("downloaddir: " + downloadDir);
-                    System.out.println("outputfilepath: " + downloadDir + part.getName());
-                    // Zapis pliku na dysku
-                    try (FileOutputStream fileOutputStream = new FileOutputStream(out)) {
-                        fileOutputStream.write(response.body().bytes());
-                        System.out.println("Pobrano plik: " + out);
-                        //todo sprawdzanie sumy kontrolnej kawałka pliku
-                        progressGUI.incrementProgress();
+                        try (Response response = client.newCall(request).execute()) {
+                            File out = new File(downloadDir);
+                            out.mkdirs(); // tworzenie tymczasowego folderu do pobrania plików
+                            out = new File(downloadDir + part.getName()); // zamiana na ścieżkę do pliku
+                            System.out.println("downloaddir: " + downloadDir);
+                            System.out.println("outputfilepath: " + downloadDir + part.getName());
+                            // Zapis pliku na dysku
+                            try (FileOutputStream fileOutputStream = new FileOutputStream(out)) {
+                                fileOutputStream.write(response.body().bytes());
+                                System.out.println("Pobrano plik: " + out);
+                                //todo sprawdzanie sumy kontrolnej kawałka pliku
+                                progressGUI.incrementProgress();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        //todo: progress bar - trzeba zrobić oddzielny do pobierania (bo są dwa procesy: download i łączenie)
+                    }
+                    System.out.println("Pobrano pliki. Łączenie...");
+
+                    try {
+                        File finalFile = new File("downloads/");
+                        finalFile.mkdirs(); // tworzenie folderu na pobrany plik
+                        finalFile = new File("downloads/" + structure.getOriginalFileName()); // docelowy plik
+                        FileMerger.mergeFiles(downloadDir, finalFile);
+                        System.out.println("Plik został poprawnie połączony");
+                        System.out.println("Sprawdzanie sumy kontrolnej...");
+
+                        System.out.println(finalFile);
+                        String hash = FileHashCalculator.getFileHash(finalFile);
+
+                        if (hash.equals(structure.getSha256Hash())) {
+                            System.out.println("Plik został poprawnie pobrany");
+                            if (progressGUI.incrementProgress()) { // Sprawdzanie, czy zadanie zostało w całości zakończone
+                                //return true;
+                            }
+                        } else {
+                            System.out.println("Sumy kontrolne są różne:");
+                            System.out.println("Structure SHA256: " + structure.getSha256Hash());
+                            System.out.println("Downloaded file SHA256: " + hash);
+                            JOptionPane.showMessageDialog(null, //todo może zrobić jednak z parentem?
+                                    "Podczas łączenia plików wystąpił błąd. \nSzczegóły błędu: sumy kontrolne są różne", "Błąd", JOptionPane.ERROR_MESSAGE);
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
+                        JOptionPane.showMessageDialog(null, //todo może zrobić jednak z parentem?
+                                "Podczas łączenia plików wystąpił błąd. \nSzczegóły błędu: \n" + e.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+                        progressGUI.dispose();
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
-                //todo: progress bar - trzeba zrobić oddzielny do pobierania (bo są dwa procesy: download i łączenie)
-            }
-            System.out.println("Pobrano pliki. Łączenie...");
-
-            File finalFile = new File("downloads/");
-            finalFile.mkdirs(); // tworzenie folderu na pobrany plik
-            finalFile = new File("downloads/" + structure.getOriginalFileName()); // docelowy plik
-            FileMerger.mergeFiles(downloadDir, finalFile);
-            System.out.println("Plik został poprawnie połączony");
-            System.out.println("Sprawdzanie sumy kontrolnej...");
-
-            System.out.println(finalFile);
-            String hash = FileHashCalculator.getFileHash(finalFile);
-
-            if (hash.equals(structure.getSha256Hash())) {
-                System.out.println("Plik został poprawnie pobrany");
-                if (progressGUI.incrementProgress()) { // Sprawdzanie, czy zadanie zostało w całości zakończone
-                    return true;
-                }
-            } else {
-                System.out.println("Sumy kontrolne są różne:");
-                System.out.println("Structure SHA256: " + structure.getSha256Hash());
-                System.out.println("Downloaded file SHA256: " + hash);
-            }
+            });
+            downloadThread.start();
 
         }
         return false; // Nie można było ukończyć zadania
-    }
-
-    @Override
-    public void close() {
-        System.out.println("Closing WebHookManager");
     }
 }

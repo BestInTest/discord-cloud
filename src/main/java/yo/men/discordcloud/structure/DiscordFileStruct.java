@@ -10,16 +10,16 @@ public class DiscordFileStruct {
     private final String originalFileName; //nazwa pliku
     //TODO: fileSize (pełna waga pliku, może w bajtach?) - pozwoli to później na łatwe pokazywanie wielkości pliku w gui
     private final long fileSize;
-    private final String fixedFilePath; // todo: do usunięcia
     private final String sha256Hash; // hash pełnego pliku
+    private final int singlePartSize;
     private LinkedList<DiscordFilePart> parts;
 
     public DiscordFileStruct(String originalFileName, String hash, LinkedList<DiscordFilePart> parts) {
         File f = new File(originalFileName);
         this.originalFileName = f.getName();
         this.fileSize = f.length();
-        this.fixedFilePath = originalFileName.replace(System.getProperty("user.dir"), Main.STORAGE_DIR);
         this.sha256Hash = hash;
+        this.singlePartSize = Main.MAX_FILE_SIZE; // nie wiem czy to będzie poprawnie działać i czy nie lepiej dać argument z konstruktora
         this.parts = parts;
     }
 
@@ -31,12 +31,12 @@ public class DiscordFileStruct {
         return fileSize;
     }
 
-    public String getFixedFilePath() { // Zwraca ścieżkę z "bazy danych" programu (dzięki temu program może być przenoszony)
-        return fixedFilePath;
-    }
-
     public String getSha256Hash() {
         return sha256Hash;
+    }
+
+    public int getSinglePartSize() {
+        return singlePartSize;
     }
 
     public LinkedList<DiscordFilePart> getParts() {

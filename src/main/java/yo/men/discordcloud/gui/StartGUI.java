@@ -39,7 +39,8 @@ public class StartGUI extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 File fileToOpen = openFileSelectionGUI("*.json");
                 if (fileToOpen != null) {
-                    try (WebHookManager fm = new WebHookManager(Main.MAX_FILE_SIZE)) {
+                    try {
+                        WebHookManager fm = new WebHookManager(Main.MAX_FILE_SIZE);
                         DiscordFileStruct f = FileHelper.loadStructureFile(fileToOpen);
                         fm.downloadFile(f);
 
@@ -68,7 +69,8 @@ public class StartGUI extends JFrame {
                 }
                 File fileToUpload = openFileSelectionGUI(null);
                 if (fileToUpload != null) {
-                    try (WebHookManager fm = new WebHookManager(settings.getWebhookUrl(), Main.MAX_FILE_SIZE);) {
+                    try {
+                        WebHookManager fm = new WebHookManager(settings.getWebhookUrl(), Main.MAX_FILE_SIZE);
                         fm.sendFile(fileToUpload);
                     } catch (IOException ex) {
                         ex.printStackTrace();

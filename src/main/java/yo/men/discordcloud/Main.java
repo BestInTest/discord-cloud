@@ -1,7 +1,6 @@
 package yo.men.discordcloud;
 
 import com.google.gson.Gson;
-import yo.men.discordcloud.gui.FileExplorerGUI;
 import yo.men.discordcloud.gui.Settings;
 import yo.men.discordcloud.gui.SettingsGUI;
 import yo.men.discordcloud.gui.StartGUI;
@@ -17,7 +16,6 @@ public class Main {
     public static final int MAX_FILE_SIZE = 25 * 1024 * 1023; // X MB (nie może być 1024^2, ponieważ jest error HTTP 413)
     public static final String STORAGE_DIR = "storage/";
     private static Settings settings;
-    private static FileExplorerGUI explorerGUI;
     private static StartGUI startGUI;
 
     public static void main(String[] args) {
@@ -32,17 +30,6 @@ public class Main {
         }
 
         showStartGUI();
-    }
-
-    public static void showFileExplorerGUI(String path) {
-        if (explorerGUI != null) {
-            explorerGUI.setVisible(false);
-        }
-        SwingUtilities.invokeLater(() -> {
-            explorerGUI = new FileExplorerGUI();
-            explorerGUI.setVisible(true);
-            explorerGUI.displayFilesAndDirectories(path);
-        });
     }
 
     public static void showStartGUI() {
@@ -61,10 +48,6 @@ public class Main {
 
     public static Settings getSettings() {
         return settings;
-    }
-
-    public static FileExplorerGUI getExplorerGUI() {
-        return explorerGUI;
     }
 
     public static void loadSettings() {
