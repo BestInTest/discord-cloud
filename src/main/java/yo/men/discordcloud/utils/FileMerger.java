@@ -7,7 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FileMerger {
-    //fixme: przy duzych plikach (duza ilosc kawalkow) plik jest zle skladany
+
     public static void mergeFiles(String folderPath, File outputFile) throws IOException {
         File folder = new File(folderPath);
         File[] partFiles = folder.listFiles((dir, name) -> name.matches(".+\\.part\\d+"));
@@ -17,7 +17,7 @@ public class FileMerger {
             return;
         }
 
-        //todo: przetestować dla pliku +100 kawałków (można zmienić maxpartsize)
+
         Arrays.sort(partFiles, new Comparator<File>() {
             @Override
             public int compare(File file1, File file2) {
