@@ -54,6 +54,8 @@ public class StartGUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Settings settings = Main.getSettings();
+
+                //Sprawdzanie ustawień
                 if (settings == null) {
                     try {
                         Main.showSettingsGUI(StartGUI.this, true);
@@ -64,12 +66,46 @@ public class StartGUI extends JFrame {
                         return;
                     }
                 }
+
                 File fileToUpload = openFileSelectionGUI(null);
+                DiscordFileStruct existingStruct = null;
+                int chunkSize = Main.MAX_FILE_SIZE;
                 if (fileToUpload != null) {
+
+                    //sprawdzanie czy nie trzeba kontynuować wysyłania
                     try {
-                        WebHookManager fm = new WebHookManager(settings.getWebhookUrl(), Main.MAX_FILE_SIZE);
-                        fm.sendFile(fileToUpload);
+                        File existingFile = new File(fileToUpload.getName() + ".json");
+                        if (existingFile.exists()) {
+                            DiscordFileStruct loadedStruct = FileHelper.loadStructureFile(existingFile);
+                            if (loadedStruct != null && loadedStruct.isValid()) {
+                                //podmiana wartości, jeżeli załadowana struktura jest poprawna
+                                existingStruct = loadedStruct;
+                                chunkSize = loadedStruct.getSinglePartSize();
+                            } else {
+                                JOptionPane.showMessageDialog(StartGUI.this,
+                                        "Znaleziono istniejący plik .json lecz nie można go poprawnie załadować. \nSzczegóły błędu: plik jest uszkodzony", "Błąd", JOptionPane.ERROR_MESSAGE);
+                            }
+                        }
                     } catch (IOException ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(StartGUI.this,
+                                "Znaleziono istniejący plik .json lecz nie można go załadować. \nSzczegóły błędu: \n" + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+                    }
+
+                    /*
+                    W przypadku kontynuacji wysyłania plik może zostać wysłany na inny webhook,
+                     lecz nie powinno to powodować problemu z późniejszym pobieraniem.
+                     */
+                    try {
+                        WebHookManager fm = new WebHookManager(settings.getWebhookUrl(), chunkSize);
+                        if (existingStruct == null) {
+                            //Wysyłanie nowego pliku, jeżeli nie wykryto istniejącej struktury
+                            fm.uploadFile(fileToUpload);
+                        } else {
+                            //Kontynuacja wysyłania, jeżeli wykryto istniejącą strukturę
+                            fm.resumeUploading(fileToUpload, existingStruct);
+                        }
+                    } catch (Exception ex) {
                         ex.printStackTrace();
                         JOptionPane.showMessageDialog(StartGUI.this,
                                 "Wystąpił nieoczekiwany błąd. \nSzczegóły błędu: \n" + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);

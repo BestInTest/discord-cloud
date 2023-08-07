@@ -1,6 +1,7 @@
 package yo.men.discordcloud.gui;
 
 import yo.men.discordcloud.Main;
+import yo.men.discordcloud.structure.WebHookManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,7 +14,7 @@ public class ProgressGUI extends JFrame {
     private JTextField progressTextField; // ilość przesłanych kawałków pliku do ilości wszystkich kawałków (uploaded/all)
     private JProgressBar progressBar;
 
-    public ProgressGUI(long progressMax) {
+    public ProgressGUI(long progressMax, WebHookManager whm) {
         setTitle("Postęp zadania");
         setPreferredSize(new Dimension(400, 100));
         setLayout(new BorderLayout());
@@ -35,9 +36,11 @@ public class ProgressGUI extends JFrame {
             @Override
             public void windowClosing(WindowEvent ev) {
                 //Zapytanie do użytkownika czy chce przerwać proces
-                int dialogResult = JOptionPane.showConfirmDialog(ProgressGUI.this, "Czy na pewno chcesz anulować pobieranie/wysyłanie?", "Ostrzeżenie", JOptionPane.YES_NO_OPTION);
+                int dialogResult = JOptionPane.showConfirmDialog(ProgressGUI.this, "Czy na pewno chcesz anulować pobieranie/wysyłanie?\nMoże to spowodować błędy.", "Ostrzeżenie", JOptionPane.YES_NO_OPTION);
                 if (dialogResult == JOptionPane.YES_OPTION) {
-                    //frame.dispose();
+                    whm.forceClose(true);
+                    dispose();
+                    //Main.getStartGUI().setVisible(true);
                     //todo przerywanie procesu. Pamiętać o poprawnym działaniu w przypadku gdy kliknięto 'Yes' kiedy proces się już zakończył
                 }
 
@@ -59,9 +62,16 @@ public class ProgressGUI extends JFrame {
         System.out.println(progress+"/"+progressBar.getMaximum());
 
         if (progress >= progressBar.getMaximum()) {
-            JOptionPane.showMessageDialog(this, "Wysyłanie/Pobieranie zakończone.", "Sukces", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Pobieranie/Wysyłanie zakończone.", "Sukces", JOptionPane.INFORMATION_MESSAGE);
             return true;
         }
         return false;
     }
+
+    /*
+    @Override
+    public void dispose() {
+        Main.getStartGUI().setVisible(true);
+    }
+    */
 }

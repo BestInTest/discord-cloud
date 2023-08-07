@@ -13,7 +13,7 @@ import java.io.*;
 
 public class Main {
 
-    public static final int MAX_FILE_SIZE = 25 * 1024 * 1023; // X MB (nie może być 1024^2, ponieważ jest error HTTP 413)
+    public static final int MAX_FILE_SIZE = 25 * 1024 * 1024 - 1; // X MB (nie może być 1024^2, ponieważ jest error HTTP 413)
     private static Settings settings;
     private static StartGUI startGUI;
 

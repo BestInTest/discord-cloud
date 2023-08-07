@@ -3,7 +3,7 @@ package yo.men.discordcloud.structure;
 import yo.men.discordcloud.Main;
 
 import java.io.File;
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
 
 public class DiscordFileStruct {
 
@@ -12,10 +12,15 @@ public class DiscordFileStruct {
     //TODO: fileSize (pełna waga pliku, może w bajtach?) - pozwoli to później na łatwe pokazywanie wielkości pliku w gui
     private final long fileSize;
     private final String sha256Hash; // hash pełnego pliku
-    private final int singlePartSize;
-    private LinkedList<DiscordFilePart> parts;
+    private final int singlePartSize; // todo zmienić nazwę na chunkSize
 
-    public DiscordFileStruct(String originalFileName, String hash, LinkedList<DiscordFilePart> parts) {
+    /*
+    FIXME: Set nie eliminuje problemu powtarzających się obiektów (prawdopodobnie dlatego że mają inne wartości)
+    Występuje też problem z wysyłaniem kolejnego kawałka pliku zaraz po wysłaniu tego błędnego
+     */
+    private LinkedHashSet<DiscordFilePart> parts;
+
+    public DiscordFileStruct(String originalFileName, String hash, LinkedHashSet<DiscordFilePart> parts) {
         File f = new File(originalFileName);
         this.originalFileName = f.getName();
         this.fileSize = f.length();
@@ -40,11 +45,20 @@ public class DiscordFileStruct {
         return singlePartSize;
     }
 
-    public LinkedList<DiscordFilePart> getParts() {
+    public LinkedHashSet<DiscordFilePart> getParts() {
         return parts;
     }
 
-    public void setParts(LinkedList<DiscordFilePart> parts) {
+    public void setParts(LinkedHashSet<DiscordFilePart> parts) {
         this.parts = parts;
+    }
+
+    /*
+    Sprawdza poprawność wartości.
+    Można użyć kiedy nie ma się pewności czy załadowany json
+    ma strukturę tej klasy.
+     */
+    public boolean isValid() {
+        return (fileSize > 0) && (singlePartSize > 0) && (originalFileName != null) && (sha256Hash != null) && (parts != null) && (!parts.isEmpty());
     }
 }

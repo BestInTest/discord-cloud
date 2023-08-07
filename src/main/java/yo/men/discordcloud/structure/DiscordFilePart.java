@@ -1,9 +1,11 @@
 package yo.men.discordcloud.structure;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class DiscordFilePart {
     private String name;
     private String sha256Hash; // hash podzielonego pliku
-    //TODO: maxPartSize - może nie? Sam fileSize powinien wystarczyć
     private String messageId;
     private String url;
     private boolean success; // czy plik został poprawnie przesłany
@@ -18,6 +20,16 @@ public class DiscordFilePart {
 
     public String getName() {
         return name;
+    }
+
+    public int getPartNumber() {
+        Pattern lastIntPattern = Pattern.compile("[^0-9]+([0-9]+)$");
+        Matcher matcher = lastIntPattern.matcher(name);
+        if (matcher.find()) {
+            String numberStr = matcher.group(1);
+            return Integer.parseInt(numberStr);
+        }
+        return -1;
     }
 
     public String getSha256Hash() {

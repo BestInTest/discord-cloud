@@ -3,6 +3,9 @@ package yo.men.discordcloud.gui;
 import javax.swing.*;
 import java.awt.*;
 
+/*
+  UNUSED
+ */
 public class DownloadProgressGUI extends JFrame {
 
     private int progress; // liczba pobranych kawałków

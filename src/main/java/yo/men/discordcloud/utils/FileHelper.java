@@ -1,5 +1,6 @@
 package yo.men.discordcloud.utils;
 
+//import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import yo.men.discordcloud.Main;
 import yo.men.discordcloud.structure.DiscordFileStruct;
@@ -17,14 +18,13 @@ public class FileHelper {
     }
 
     //Pierwszy kawałek powinien mieć partNumber = 0
-    public static File getFilePart(String filePath, int partNumber) throws IOException {
+    public static File getFilePart(String filePath, int partNumber, long chunkSize) throws IOException {
 
-        long maxParts = calculateMaxPartCount(filePath);
+        long maxParts = calculateMaxPartCount(filePath, Main.MAX_FILE_SIZE);
         if (partNumber < 0 || partNumber >= maxParts) {
             throw new IndexOutOfBoundsException("Provided part number (" + partNumber + ") is out of file range (0-" + (maxParts-1) + ")");
         }
 
-        int chunkSize = MAX_FILE_SIZE; // Rozmiar części
         long startPosition = (long) partNumber * chunkSize;
 
         File file = new File(filePath);
@@ -56,10 +56,9 @@ public class FileHelper {
         return new File(outputFile);
     }
 
-    public static long calculateMaxPartCount(String filePath) {
+    public static long calculateMaxPartCount(String filePath, long chunkSize) {
         File file = new File(filePath);
         long fileSize = file.length();
-        long chunkSize =  MAX_FILE_SIZE; // Rozmiar części
 
         long maxPartCount = fileSize / chunkSize;
         if (fileSize % chunkSize != 0) {
@@ -88,8 +87,7 @@ public class FileHelper {
         return filename.substring(0, extensionIndex);
     }
 
-    public static DiscordFileStruct loadStructureFile(File file) {
-        DiscordFileStruct f = null;
+    public static DiscordFileStruct loadStructureFile(File file) throws IOException {
         System.out.println("loading file " + file.getAbsolutePath());
 
         File structureFile = FileHelper.toStructureFile(file); //structureFile w moim rozumieniu to json z danymi o kawałkach pliku itp
@@ -97,17 +95,14 @@ public class FileHelper {
             Gson gson = new Gson();
             DiscordFileStruct dscFile = gson.fromJson(reader, DiscordFileStruct.class);
             if (dscFile != null) {
-                f = dscFile;
+                return dscFile;
             }
-        } catch (FileNotFoundException e) { //Struktura jeszcze nie istnieje, - wysyłanie pierwszego kawałka
-            //Tworzenie nowej struktury pliku
-            return f;
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (FileNotFoundException e) { //Struktura jeszcze nie istnieje - wysyłanie pierwszego kawałka
+            return null;
         }
 
-        System.out.println("loaded " + f.getParts().size() + " parts");
-        return f;
+        //System.out.println("loaded " + f.getParts().size() + " parts");
+        return null;
     }
 
     public static void deleteDirectory(File path){
