@@ -444,6 +444,7 @@ public class WebHookManager {
                         for (int attemps = 0; (attemps < 5) && (!success); attemps++) {
                             try (Response response = client.newCall(request).execute()) {
                                 responseCode = response.code();
+                                System.out.println("response: " + responseCode);
 
                                 //too many requests
                                 if (responseCode == 429) {
