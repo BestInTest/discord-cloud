@@ -40,8 +40,6 @@ public class ProgressGUI extends JFrame {
                 if (dialogResult == JOptionPane.YES_OPTION) {
                     whm.forceClose(true);
                     dispose();
-                    //Main.getStartGUI().setVisible(true);
-                    //todo przerywanie procesu. Pamiętać o poprawnym działaniu w przypadku gdy kliknięto 'Yes' kiedy proces się już zakończył
                 }
 
             }

@@ -288,8 +288,6 @@ public class WebHookManager {
                                     return;
                                 }
 
-                                //todo obsługa innych kodów
-
                                 if (responseCode == 200 || responseCode == 201) {
                                     success = true;
                                     discordResponse = parseResponse(response);
@@ -379,7 +377,7 @@ public class WebHookManager {
         wcześniej wysłany, to trzeba usunąć go z listy kawałków i dodać ten poprawny.
          */
         if (oldBadPart != null) {
-            uploadedFiles.remove(oldBadPart); //fixme: nie usuwa (w pliku cały czas pozostaje wartość)
+            uploadedFiles.remove(oldBadPart);
         }
         uploadedFiles.add(newPart);
 
