@@ -33,7 +33,7 @@ public class SettingsGUI extends JDialog {
 
         Settings settings = Main.getSettings();
         if (settings != null) { // jeżeli plik setting.json istnieje, gui zostanie uzupełnione o aktualne ustawienia
-            clearCacheCheckBox.setSelected(true);
+            clearCacheCheckBox.setSelected(settings.isClearCache());
             webhookUrlField.setText(settings.getWebhookUrl());
         }
 
