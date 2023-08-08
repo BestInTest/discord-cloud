@@ -16,12 +16,9 @@ public class SettingsGUI extends JDialog {
     private JTextField webhookUrlField;
     private JButton saveButton;
 
-    public SettingsGUI(Frame parent, boolean isModal) throws IOException {
+    public SettingsGUI(Frame parent, boolean isModal) {
         super(parent, isModal);
         setTitle("Ustawienia");
-        //if (startAfterExit) { // Dla pierwszego uruchomienia, kiedy główne gui jest ukryte (zamknięcie ustawień będzie zamykać program)
-        //    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        //}
         setPreferredSize(new Dimension(400, 140));
         setLayout(new BorderLayout());
 
@@ -79,8 +76,8 @@ public class SettingsGUI extends JDialog {
         fileWriter.write(json);
         fileWriter.close();
         Main.loadSettings();
-        System.out.println(Main.getSettings());
+
         JOptionPane.showMessageDialog(this, "Ustawienia zostały zapisane.", "Informacja", JOptionPane.INFORMATION_MESSAGE);
-        setVisible(false); // Zamykanie ustawień
+        dispose(); // Zamykanie ustawień
     }
 }

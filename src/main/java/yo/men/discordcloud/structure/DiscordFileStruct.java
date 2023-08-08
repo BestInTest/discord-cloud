@@ -11,7 +11,7 @@ public class DiscordFileStruct {
     private final String originalFileName; //nazwa pliku
     private final long fileSize;
     private final String sha256Hash; // hash pełnego pliku
-    private final int singlePartSize; // todo zmienić nazwę na chunkSize
+    private final int singlePartSize;
     private LinkedHashSet<DiscordFilePart> parts;
 
     public DiscordFileStruct(String originalFileName, String hash, LinkedHashSet<DiscordFilePart> parts) {

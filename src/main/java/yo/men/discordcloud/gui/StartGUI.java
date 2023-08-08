@@ -24,11 +24,13 @@ public class StartGUI extends JFrame {
         // Utworzenie przycisków
         JButton downloadButton = new JButton("Download");
         JButton uploadButton = new JButton("Upload");
+        JButton settingsButton = new JButton("Settings");
 
         // Ustawienie większej czcionki dla napisów na przyciskach
         Font largerFont = new Font(downloadButton.getFont().getName(), Font.PLAIN, 18);
         downloadButton.setFont(largerFont);
         uploadButton.setFont(largerFont);
+        settingsButton.setFont(largerFont);
 
         // Dodanie akcji do przycisków
         downloadButton.addActionListener(new ActionListener() {
@@ -114,6 +116,18 @@ public class StartGUI extends JFrame {
             }
         });
 
+        settingsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Main.showSettingsGUI(StartGUI.this, true);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(StartGUI.this, "Wystąpił błąd podczas zapisywania ustawień. \nSzczegóły błędu:\n" + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
         // Ustawienie układu kontenera na GridLayout z jednym wierszem i dwiema kolumnami
         Container container = getContentPane();
         container.setLayout(new GridLayout(0, 1)); // 0 oznacza dowolną ilość wierszy, 1 kolumnę
@@ -121,6 +135,7 @@ public class StartGUI extends JFrame {
         // Dodanie przycisków do kontenera
         container.add(downloadButton);
         container.add(uploadButton);
+        container.add(settingsButton);
     }
 
     private File openFileSelectionGUI(String extensionFilter) {
