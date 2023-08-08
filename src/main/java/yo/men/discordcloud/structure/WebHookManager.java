@@ -90,6 +90,14 @@ public class WebHookManager {
                                     return;
                                 }
 
+                                //bad webhook
+                                if (responseCode == 401) {
+                                    System.err.println("Bad webhook link");
+                                    JOptionPane.showMessageDialog(null,
+                                            "Sprawdź czy ustawiony webhook jest poprawny. \nSzczegóły błędu: HTTP code 401", "Błąd", JOptionPane.ERROR_MESSAGE);
+                                    return;
+                                }
+
                                 if (responseCode == 200 || responseCode == 201) {
                                     success = true;
                                     discordResponse = parseResponse(response);
@@ -139,12 +147,18 @@ public class WebHookManager {
 
 
                     }
-                } catch (IOException e) {
+                } catch (IllegalArgumentException e) {
                     e.printStackTrace();
-                    //todo jeżeli potrzeba będzie zmieniać parenty to może zrobić je pod ProgressGUI
+                    JOptionPane.showMessageDialog(null,
+                            "Nie można wysłać pliku. Upewnij się że ustawiony webhook jest poprawny. \nSzczegóły błędu: \n" + e.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+                    progressGUI.dispose();
+                    forceClose(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
                     JOptionPane.showMessageDialog(null,
                             "Wystąpił nieoczekiwany błąd. \nSzczegóły błędu: \n" + e.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
                     progressGUI.dispose();
+                    forceClose(true);
                 }
                 Main.getStartGUI().setVisible(true); // pokazywanie głównego okna po zakończeniu operacji
             }
@@ -267,6 +281,14 @@ public class WebHookManager {
                                     return;
                                 }
 
+                                //bad webhook
+                                if (responseCode == 401) {
+                                    System.err.println("Bad webhook link");
+                                    JOptionPane.showMessageDialog(null,
+                                            "Sprawdź czy ustawiony webhook jest poprawny. \nSzczegóły błędu: HTTP code 401", "Błąd", JOptionPane.ERROR_MESSAGE);
+                                    return;
+                                }
+
                                 //todo obsługa innych kodów
 
                                 if (responseCode == 200 || responseCode == 201) {
@@ -318,13 +340,18 @@ public class WebHookManager {
 
 
                     }
-                } catch (IOException e) {
+                } catch (IllegalArgumentException e) {
                     e.printStackTrace();
-                    //todo jeżeli potrzeba będzie zmieniać parenty to może zrobić je pod ProgressGUI
+                    JOptionPane.showMessageDialog(null,
+                            "Nie można wysłać pliku. Upewnij się że ustawiony webhook jest poprawny. \nSzczegóły błędu: \n" + e.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+                    progressGUI.dispose();
+                    forceClose(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
                     JOptionPane.showMessageDialog(null,
                             "Wystąpił nieoczekiwany błąd. \nSzczegóły błędu: \n" + e.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
                     progressGUI.dispose();
-                    runningThread.interrupt();
+                    forceClose(true);
                 }
                 Main.getStartGUI().setVisible(true); // pokazywanie głównego okna po zakończeniu operacji
             }
