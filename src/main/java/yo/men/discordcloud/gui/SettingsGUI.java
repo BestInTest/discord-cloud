@@ -25,8 +25,9 @@ public class SettingsGUI extends JDialog {
         JPanel settingsPanel = new JPanel();
         settingsPanel.setLayout(new GridLayout(2, 2, 10, 10));
 
-        JLabel clearCacheLabel = new JLabel("Czyść cache przy włączeniu:");
+        JLabel clearCacheLabel = new JLabel("Czyść .temp przy włączeniu:");
         clearCacheCheckBox = new JCheckBox();
+        clearCacheCheckBox.setSelected(true); // domyślne włączanie czyszczenia plików tymczasowych
 
         JLabel webhookUrlLabel = new JLabel("URL webhooka:");
         webhookUrlField = new JTextField();
