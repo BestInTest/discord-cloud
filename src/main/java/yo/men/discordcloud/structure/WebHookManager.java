@@ -237,6 +237,7 @@ public class WebHookManager {
                         File partFile;
                         if (badUploads.isEmpty()) {
                             //standardowa kontynuacja wysyłania
+                            //fixme: tutaj potrafi wystąpić błąd po wysłaniu ostatniego kawałka pliku ale mimo wszystko plik jest przesyłany poprawnie
                             partFile = FileHelper.getFilePart(file.getAbsolutePath(), partNum, struct.getSinglePartSize());
                         } else {
                             //powtarzanie wysyłania pliku
