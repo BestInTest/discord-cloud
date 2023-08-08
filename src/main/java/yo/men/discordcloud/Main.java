@@ -22,7 +22,7 @@ public class Main {
         loadSettings(); // settings będzie nullem jeżeli plik ustawień nie będzie istniał
 
         if (settings != null && settings.isClearCache()) {
-            System.out.println("Czyszczenie cache");
+            System.out.println("Usuwanie plików tymczasowych");
             File cache = new File(".temp/");
             FileHelper.deleteDirectory(cache);
         }

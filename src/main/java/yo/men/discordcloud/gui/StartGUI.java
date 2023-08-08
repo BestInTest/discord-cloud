@@ -86,6 +86,7 @@ public class StartGUI extends JFrame {
                             } else {
                                 JOptionPane.showMessageDialog(StartGUI.this,
                                         "Znaleziono istniejący plik .json lecz nie można go poprawnie załadować. \nSzczegóły błędu: plik jest uszkodzony", "Błąd", JOptionPane.ERROR_MESSAGE);
+                                return;
                             }
                         }
                     } catch (IOException ex) {
