@@ -137,8 +137,7 @@ public class WebHookManager {
                                                 "Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + "\nHTTP code: " + responseCode + "\n\nProszę ponowić wysyłanie pliku", "Błąd", JOptionPane.ERROR_MESSAGE);
                                         System.err.println("Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + " (HTTP code: " + responseCode + ")");
                                         progressGUI.dispose();
-                                        runningThread.interrupt();
-                                        Main.getStartGUI().setVisible(true);
+                                        forceClose(true);
                                         return;
                                     }
                                 }
@@ -330,8 +329,7 @@ public class WebHookManager {
                                                 "Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + "\nHTTP code: " + responseCode + "\n\nProszę ponowić wysyłanie pliku", "Błąd", JOptionPane.ERROR_MESSAGE);
                                         System.err.println("Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + " (HTTP code: " + responseCode + ")");
                                         progressGUI.dispose();
-                                        runningThread.interrupt();
-                                        Main.getStartGUI().setVisible(true);
+                                        forceClose(true);
                                         return;
                                     }
                                 }
