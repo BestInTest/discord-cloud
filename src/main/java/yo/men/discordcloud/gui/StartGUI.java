@@ -39,7 +39,7 @@ public class StartGUI extends JFrame {
                 File fileToOpen = openFileSelectionGUI("*.json");
                 if (fileToOpen != null) {
                     try {
-                        WebHookManager fm = new WebHookManager(Main.MAX_FILE_SIZE);
+                        WebHookManager fm = new WebHookManager(Main.CHUNK_FILE_SIZE);
                         DiscordFileStruct f = FileHelper.loadStructureFile(fileToOpen);
                         fm.downloadFile(f);
 
@@ -71,7 +71,7 @@ public class StartGUI extends JFrame {
 
                 File fileToUpload = openFileSelectionGUI(null);
                 DiscordFileStruct existingStruct = null;
-                int chunkSize = Main.MAX_FILE_SIZE;
+                int chunkSize = Main.CHUNK_FILE_SIZE;
                 if (fileToUpload != null) {
 
                     //sprawdzanie czy nie trzeba kontynuować wysyłania

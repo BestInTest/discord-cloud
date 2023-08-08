@@ -13,12 +13,11 @@ import java.io.*;
 
 public class Main {
 
-    public static final int MAX_FILE_SIZE = 25 * 1024 * 1024 - 1; // X MB (nie może być 1024^2, ponieważ jest error HTTP 413)
+    public static final int CHUNK_FILE_SIZE = 25 * 1024 * 1024 - 1; // X MB (nie może być 1024^2, ponieważ jest error HTTP 413)
     private static Settings settings;
     private static StartGUI startGUI;
 
     public static void main(String[] args) {
-        //todo 2: sprawdzać czy plik juz istnieje
 
         loadSettings(); // settings będzie nullem jeżeli plik ustawień nie będzie istniał
 

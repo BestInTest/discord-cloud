@@ -9,7 +9,7 @@ import java.io.*;
 
 public class FileHelper {
 
-    private static final int MAX_FILE_SIZE = Main.MAX_FILE_SIZE;
+    private static final int MAX_FILE_SIZE = Main.CHUNK_FILE_SIZE;
     private static final String TEMP_DIR_PATH = ".temp/";
 
     // Sprawdza, czy plik jest podzielony
@@ -20,7 +20,7 @@ public class FileHelper {
     //Pierwszy kawałek powinien mieć partNumber = 0
     public static File getFilePart(String filePath, int partNumber, long chunkSize) throws IOException {
 
-        long maxParts = calculateMaxPartCount(filePath, Main.MAX_FILE_SIZE);
+        long maxParts = calculateMaxPartCount(filePath, Main.CHUNK_FILE_SIZE);
         if (partNumber < 0 || partNumber >= maxParts) {
             throw new IndexOutOfBoundsException("Provided part number (" + partNumber + ") is out of file range (0-" + (maxParts-1) + ")");
         }

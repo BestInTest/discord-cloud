@@ -42,7 +42,7 @@ public class WebHookManager {
             return;
         }
 
-        long partsCount = FileHelper.calculateMaxPartCount(file.getAbsolutePath(), Main.MAX_FILE_SIZE);
+        long partsCount = FileHelper.calculateMaxPartCount(file.getAbsolutePath(), Main.CHUNK_FILE_SIZE);
 
         ProgressGUI progressGUI = new ProgressGUI(partsCount, this);
         OkHttpClient client = new OkHttpClient();
@@ -52,7 +52,7 @@ public class WebHookManager {
             public void run() {
                 try {
                     for (int i = 0; i < partsCount; i++) {
-                        File partFile = FileHelper.getFilePart(file.getAbsolutePath(), i, Main.MAX_FILE_SIZE);
+                        File partFile = FileHelper.getFilePart(file.getAbsolutePath(), i, Main.CHUNK_FILE_SIZE);
 
                         RequestBody requestBody = new MultipartBody.Builder()
                                 .setType(MultipartBody.FORM)
@@ -400,6 +400,13 @@ public class WebHookManager {
             if (alreadyDownloaded.exists()) {
                 JOptionPane.showMessageDialog(null,
                         "Znaleziono już istniejący plik w lokalizacji pobierania.", "Błąd", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (!structure.isValid()) {
+                System.err.println("Invalid structure");
+                JOptionPane.showMessageDialog(null,
+                        "Invalid structure", "Błąd", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 

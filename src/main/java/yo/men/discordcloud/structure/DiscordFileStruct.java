@@ -7,7 +7,7 @@ import java.util.LinkedHashSet;
 
 public class DiscordFileStruct {
 
-    //todo: fileVersion
+    private final int fileVersion; // obecnie nie ma zastosowania, może się przydać w przyszłości
     private final String originalFileName; //nazwa pliku
     private final long fileSize;
     private final String sha256Hash; // hash pełnego pliku
@@ -15,12 +15,17 @@ public class DiscordFileStruct {
     private LinkedHashSet<DiscordFilePart> parts;
 
     public DiscordFileStruct(String originalFileName, String hash, LinkedHashSet<DiscordFilePart> parts) {
+        this.fileVersion = 1;
         File f = new File(originalFileName);
         this.originalFileName = f.getName();
         this.fileSize = f.length();
         this.sha256Hash = hash;
-        this.singlePartSize = Main.MAX_FILE_SIZE; // nie wiem czy to będzie poprawnie działać i czy nie lepiej dać argument z konstruktora
+        this.singlePartSize = Main.CHUNK_FILE_SIZE; // nie wiem czy to będzie poprawnie działać i czy nie lepiej dać argument z konstruktora
         this.parts = parts;
+    }
+
+    public int getFileVersion() {
+        return fileVersion;
     }
 
     public String getOriginalFileName() {
@@ -53,6 +58,6 @@ public class DiscordFileStruct {
     ma strukturę tej klasy.
      */
     public boolean isValid() {
-        return (fileSize > 0) && (singlePartSize > 0) && (originalFileName != null) && (sha256Hash != null) && (parts != null) && (!parts.isEmpty());
+        return (fileVersion > 0) && (fileSize > 0) && (singlePartSize > 0) && (originalFileName != null) && (sha256Hash != null) && (parts != null) && (!parts.isEmpty());
     }
 }
