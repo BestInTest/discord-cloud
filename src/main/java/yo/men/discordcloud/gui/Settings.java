@@ -3,6 +3,7 @@ package yo.men.discordcloud.gui;
 public class Settings {
     private boolean clearCache;
     private String webhookUrl;
+    //todo: dodać chunksize i może fileVersion
 
     public boolean isClearCache() {
         return clearCache;
