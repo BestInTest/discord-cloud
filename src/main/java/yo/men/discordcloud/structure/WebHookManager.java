@@ -82,6 +82,16 @@ public class WebHookManager {
                                     continue;
                                 }
 
+                                //Gateway unavailable
+                                if (responseCode == 502) {
+                                    /*
+                                    Według dokumentacji wystarczy poczekać i spróbować ponownie.
+                                    https://discord.com/developers/docs/topics/opcodes-and-status-codes#http
+                                     */
+                                    Thread.sleep(3000);
+                                    continue;
+                                }
+
                                 //file too large
                                 if (responseCode == 413) {
                                     System.err.println("File too large: HTTP code 413");
@@ -132,7 +142,7 @@ public class WebHookManager {
                                 } else {
                                     saveUploadedFile(partFile, file, null, null, success);
 
-                                    if (responseCode != 429) { // ignore too many requests error
+                                    if (responseCode != 429 && responseCode != 502) { // ignore too many requests and gateway error
                                         JOptionPane.showMessageDialog(null,
                                                 "Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + "\nHTTP code: " + responseCode + "\n\nProszę ponowić wysyłanie pliku", "Błąd", JOptionPane.ERROR_MESSAGE);
                                         System.err.println("Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + " (HTTP code: " + responseCode + ")");
@@ -273,6 +283,16 @@ public class WebHookManager {
                                     continue;
                                 }
 
+                                //Gateway unavailable
+                                if (responseCode == 502) {
+                                    /*
+                                    Według dokumentacji wystarczy poczekać i spróbować ponownie.
+                                    https://discord.com/developers/docs/topics/opcodes-and-status-codes#http
+                                     */
+                                    Thread.sleep(3000);
+                                    continue;
+                                }
+
                                 //file too large
                                 if (responseCode == 413) {
                                     System.err.println("File too large: HTTP code 413");
@@ -323,7 +343,7 @@ public class WebHookManager {
                                 } else {
                                     saveUploadedFile(partFile, file, null, null, success);
 
-                                    if (responseCode != 429) { // ignore too many requests error
+                                    if (responseCode != 429 && responseCode != 502) { // ignore too many requests and gateway error
                                         JOptionPane.showMessageDialog(null,
                                                 "Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + "\nHTTP code: " + responseCode + "\n\nProszę ponowić wysyłanie pliku", "Błąd", JOptionPane.ERROR_MESSAGE);
                                         System.err.println("Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + " (HTTP code: " + responseCode + ")");
@@ -481,6 +501,16 @@ public class WebHookManager {
                                 if (responseCode == 429) {
                                     //czekanie aż zejdzie rate limit i ponawianie próby
                                     Thread.sleep(5000); // nie wiem czy 5s to nie za mało
+                                    continue;
+                                }
+
+                                //Gateway unavailable
+                                if (responseCode == 502) {
+                                    /*
+                                    Według dokumentacji wystarczy poczekać i spróbować ponownie.
+                                    https://discord.com/developers/docs/topics/opcodes-and-status-codes#http
+                                     */
+                                    Thread.sleep(3000);
                                     continue;
                                 }
 
