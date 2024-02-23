@@ -514,7 +514,6 @@ public class WebHookManager {
                                     continue;
                                 }
 
-                                //file too large
                                 if (responseCode == 404) {
                                     System.err.println("File not found: HTTP code 404");
                                     JOptionPane.showMessageDialog(null,
