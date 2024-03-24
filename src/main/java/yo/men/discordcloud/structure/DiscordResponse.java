@@ -1,6 +1,7 @@
 package yo.men.discordcloud.structure;
 
 import com.google.gson.annotations.SerializedName;
+import yo.men.discordcloud.structure.attachment.DiscordAttachment;
 
 import java.util.List;
 

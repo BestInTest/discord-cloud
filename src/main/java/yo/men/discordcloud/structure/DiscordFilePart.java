@@ -1,5 +1,7 @@
 package yo.men.discordcloud.structure;
 
+import yo.men.discordcloud.structure.attachment.AttachmentAuth;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,5 +48,9 @@ public class DiscordFilePart {
 
     public boolean isSuccess() {
         return success;
+    }
+
+    public AttachmentAuth getAttachmentAuth() {
+        return new AttachmentAuth(url);
     }
 }

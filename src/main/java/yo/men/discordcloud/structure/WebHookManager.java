@@ -1,19 +1,18 @@
 package yo.men.discordcloud.structure;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import okhttp3.*;
 import yo.men.discordcloud.Main;
 import yo.men.discordcloud.gui.ProgressGUI;
+import yo.men.discordcloud.structure.attachment.DiscordAttachment;
+import yo.men.discordcloud.utils.ApiUtil;
 import yo.men.discordcloud.utils.FileHashCalculator;
 import yo.men.discordcloud.utils.FileHelper;
 import yo.men.discordcloud.utils.FileMerger;
 
 import javax.swing.*;
-import java.io.*;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Stack;
 
 public class WebHookManager {
@@ -110,7 +109,7 @@ public class WebHookManager {
 
                                 if (responseCode == 200 || responseCode == 201) {
                                     success = true;
-                                    discordResponse = parseResponse(response);
+                                    discordResponse = ApiUtil.parseResponse(response);
                                     break;
                                 }
 
@@ -125,7 +124,7 @@ public class WebHookManager {
                                     if (discordResponse != null && discordResponse.getAttachments() != null && !discordResponse.getAttachments().isEmpty()) {
                                         DiscordAttachment attachment = discordResponse.getAttachments().get(0);
                                         String messageId = discordResponse.getId();
-                                        saveUploadedFile(partFile, file, messageId, attachment.getUrl(), success);
+                                        FileHelper.saveUploadedFile(partFile, file, messageId, attachment.getUrl(), success);
                                         System.out.println("Wysłano plik: " + partFile.getName() + " (ID wiadomości: " + messageId + ")");
                                         System.out.println("URL pliku: " + attachment.getUrl());
                                         partFile.delete(); // usuwanie pliku tymczasowego
@@ -140,7 +139,7 @@ public class WebHookManager {
                                         throw new RuntimeException("Invalid Discord response!");
                                     }
                                 } else {
-                                    saveUploadedFile(partFile, file, null, null, success);
+                                    FileHelper.saveUploadedFile(partFile, file, null, null, success);
 
                                     if (responseCode != 429 && responseCode != 502) { // ignore too many requests and gateway error
                                         JOptionPane.showMessageDialog(null,
@@ -207,7 +206,7 @@ public class WebHookManager {
         }
 
         long totalPartsCount = FileHelper.calculateMaxPartCount(file.getAbsolutePath(), struct.getSinglePartSize());
-        int badPartsCount = extractBadParts(struct.getParts()).size();
+        int badPartsCount = FileHelper.extractBadParts(struct.getParts()).size();
         int uploadedPartsCount = struct.getParts().size() - badPartsCount;
 
         //sprawdzanie czy plik został już w pełni wysłany
@@ -311,7 +310,7 @@ public class WebHookManager {
 
                                 if (responseCode == 200 || responseCode == 201) {
                                     success = true;
-                                    discordResponse = parseResponse(response);
+                                    discordResponse = ApiUtil.parseResponse(response);
                                     break;
                                 }
 
@@ -326,7 +325,7 @@ public class WebHookManager {
                                     if (discordResponse != null && discordResponse.getAttachments() != null && !discordResponse.getAttachments().isEmpty()) {
                                         DiscordAttachment attachment = discordResponse.getAttachments().get(0);
                                         String messageId = discordResponse.getId();
-                                        saveUploadedFile(partFile, file, messageId, attachment.getUrl(), success);
+                                        FileHelper.saveUploadedFile(partFile, file, messageId, attachment.getUrl(), success);
                                         System.out.println("Wysłano plik: " + partFile.getName() + " (ID wiadomości: " + messageId + ")");
                                         System.out.println("URL pliku: " + attachment.getUrl());
                                         partFile.delete(); // usuwanie pliku tymczasowego
@@ -341,7 +340,7 @@ public class WebHookManager {
                                         throw new RuntimeException("Invalid Discord response!");
                                     }
                                 } else {
-                                    saveUploadedFile(partFile, file, null, null, success);
+                                    FileHelper.saveUploadedFile(partFile, file, null, null, success);
 
                                     if (responseCode != 429 && responseCode != 502) { // ignore too many requests and gateway error
                                         JOptionPane.showMessageDialog(null,
@@ -376,68 +375,6 @@ public class WebHookManager {
         runningThread.start();
     }
 
-    private DiscordResponse parseResponse(Response response) throws IOException {
-        String responseBody = response.body().string();
-        Gson gson = new Gson();
-        return gson.fromJson(responseBody, DiscordResponse.class);
-    }
-
-    private void saveUploadedFile(File partFile, File originalFile, String messageId, String url, boolean isSuccess) throws IOException {
-        DiscordFileStruct structure = FileHelper.loadStructureFile(new File(originalFile.getName() + ".json"));
-        if (structure == null) {
-            structure = new DiscordFileStruct(originalFile.getAbsolutePath(), FileHashCalculator.getFileHash(originalFile), new LinkedHashSet<>());
-        }
-        LinkedHashSet<DiscordFilePart> uploadedFiles = structure.getParts();
-
-        String hash = FileHashCalculator.getFileHash(partFile);
-        DiscordFilePart oldBadPart = getBadPart(partFile.getName(), uploadedFiles); // kawałek który nie mógł zostać wysłany
-        DiscordFilePart newPart = new DiscordFilePart(partFile.getName(), hash, messageId, url, isSuccess);
-
-        /*
-        Jeżeli jest wysyłany jakiś kawałek pliku, który nie mógł zostać
-        wcześniej wysłany, to trzeba usunąć go z listy kawałków i dodać ten poprawny.
-         */
-        if (oldBadPart != null) {
-            uploadedFiles.remove(oldBadPart);
-        }
-        uploadedFiles.add(newPart);
-
-        saveStructure(structure, uploadedFiles);
-    }
-
-    private void saveStructure(DiscordFileStruct structure, LinkedHashSet<DiscordFilePart> uploadedFiles) {
-        structure.setParts(uploadedFiles);
-
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String json = gson.toJson(structure);
-
-        File targetStructFile = new File(structure.getOriginalFileName() + ".json");
-        try (Writer writer = new FileWriter(targetStructFile)) {
-            writer.write(json);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private DiscordFilePart getBadPart(String partFileName, LinkedHashSet<DiscordFilePart> partsList) {
-        for (DiscordFilePart part : partsList) {
-            if (part.getName().equals(partFileName)) {
-                return part;
-            }
-        }
-        return null;
-    }
-
-    private Set<DiscordFilePart> extractBadParts(LinkedHashSet<DiscordFilePart> allParts) {
-        Set<DiscordFilePart> badParts = new HashSet<>();
-        for (DiscordFilePart part : allParts) {
-            if (!part.isSuccess()) {
-                badParts.add(part);
-            }
-        }
-        return badParts;
-    }
-
     public void downloadFile(DiscordFileStruct structure) {
         if (structure != null) {
             File alreadyDownloaded = new File("downloads/" + structure.getOriginalFileName());
@@ -454,9 +391,15 @@ public class WebHookManager {
                 return;
             }
 
-            if (!extractBadParts(structure.getParts()).isEmpty()) {
+            if (!FileHelper.extractBadParts(structure.getParts()).isEmpty()) {
                 JOptionPane.showMessageDialog(null,
                         "Ten plik jest uszkodzony lub nie został poprawnie wysłany.", "Błąd", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (structure.isExpired()) {
+                JOptionPane.showMessageDialog(null,
+                        "Możliwość pobierania wygasła. Odśwież linki i spróbuj ponownie.", "Błąd", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 

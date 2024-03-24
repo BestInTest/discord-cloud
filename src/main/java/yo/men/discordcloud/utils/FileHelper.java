@@ -2,10 +2,15 @@ package yo.men.discordcloud.utils;
 
 //import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import yo.men.discordcloud.Main;
+import yo.men.discordcloud.structure.DiscordFilePart;
 import yo.men.discordcloud.structure.DiscordFileStruct;
 
 import java.io.*;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class FileHelper {
 
@@ -13,6 +18,7 @@ public class FileHelper {
     private static final String TEMP_DIR_PATH = ".temp/";
 
     // Sprawdza, czy plik jest podzielony
+    //Zmienić na isChunkFile?
     public static boolean isSplitFile(String fileName) {
         return fileName.matches(".+\\.part\\d+$");
     }
@@ -87,6 +93,43 @@ public class FileHelper {
         return filename.substring(0, extensionIndex);
     }
 
+    public static void saveUploadedFile(File partFile, File originalFile, String messageId, String url, boolean isSuccess) throws IOException {
+        DiscordFileStruct structure = FileHelper.loadStructureFile(new File(originalFile.getName() + ".json"));
+        if (structure == null) {
+            structure = new DiscordFileStruct(originalFile.getAbsolutePath(), FileHashCalculator.getFileHash(originalFile), new LinkedHashSet<>());
+        }
+        LinkedHashSet<DiscordFilePart> uploadedFiles = structure.getParts();
+
+        String hash = FileHashCalculator.getFileHash(partFile);
+        DiscordFilePart oldBadPart = getBadPart(partFile.getName(), uploadedFiles); // kawałek który nie mógł zostać wysłany
+        DiscordFilePart newPart = new DiscordFilePart(partFile.getName(), hash, messageId, url, isSuccess);
+
+        /*
+        Jeżeli jest wysyłany jakiś kawałek pliku, który nie mógł zostać
+        wcześniej wysłany, to trzeba usunąć go z listy kawałków i dodać ten poprawny.
+         */
+        if (oldBadPart != null) {
+            uploadedFiles.remove(oldBadPart);
+        }
+        uploadedFiles.add(newPart);
+
+        saveStructure(structure, uploadedFiles);
+    }
+
+    public static void saveStructure(DiscordFileStruct structure, LinkedHashSet<DiscordFilePart> uploadedFiles) {
+        structure.setParts(uploadedFiles);
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String json = gson.toJson(structure);
+
+        File targetStructFile = new File(structure.getOriginalFileName() + ".json");
+        try (Writer writer = new FileWriter(targetStructFile)) {
+            writer.write(json);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static DiscordFileStruct loadStructureFile(File file) throws IOException {
         System.out.println("loading file " + file.getAbsolutePath());
 
@@ -103,6 +146,25 @@ public class FileHelper {
 
         //System.out.println("loaded " + f.getParts().size() + " parts");
         return null;
+    }
+
+    public static DiscordFilePart getBadPart(String partFileName, LinkedHashSet<DiscordFilePart> partsList) {
+        for (DiscordFilePart part : partsList) {
+            if (part.getName().equals(partFileName)) {
+                return part;
+            }
+        }
+        return null;
+    }
+
+    public static Set<DiscordFilePart> extractBadParts(LinkedHashSet<DiscordFilePart> allParts) {
+        Set<DiscordFilePart> badParts = new HashSet<>();
+        for (DiscordFilePart part : allParts) {
+            if (!part.isSuccess()) {
+                badParts.add(part);
+            }
+        }
+        return badParts;
     }
 
     public static void deleteDirectory(File path){

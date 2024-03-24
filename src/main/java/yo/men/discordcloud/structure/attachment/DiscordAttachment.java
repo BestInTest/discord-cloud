@@ -1,4 +1,4 @@
-package yo.men.discordcloud.structure;
+package yo.men.discordcloud.structure.attachment;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -15,5 +15,9 @@ public class DiscordAttachment {
 
     public String getUrl() {
         return url;
+    }
+
+    public AttachmentAuth getAttachmentAuth() {
+        return new AttachmentAuth(url);
     }
 }

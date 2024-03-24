@@ -60,4 +60,14 @@ public class DiscordFileStruct {
     public boolean isValid() {
         return (fileVersion > 0) && (fileSize > 0) && (singlePartSize > 0) && (originalFileName != null) && (sha256Hash != null) && (parts != null) && (!parts.isEmpty());
     }
+
+    //Sprawdza czy żaden link nie stracił ważności
+    public boolean isExpired() {
+        for (DiscordFilePart part : parts) {
+            if (part.getAttachmentAuth().isExpired()) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

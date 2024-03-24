@@ -1,6 +1,7 @@
 package yo.men.discordcloud.gui;
 
 import yo.men.discordcloud.Main;
+import yo.men.discordcloud.client.AttachmentRefresher;
 import yo.men.discordcloud.structure.DiscordFileStruct;
 import yo.men.discordcloud.structure.WebHookManager;
 import yo.men.discordcloud.utils.FileHelper;
@@ -17,19 +18,21 @@ public class StartGUI extends JFrame {
     public StartGUI() {
         // Ustawienia okna
         setTitle("Discord Cloud");
-        setSize(300, 150);
+        setSize(300, 200);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         // Utworzenie przycisków
         JButton downloadButton = new JButton("Download");
         JButton uploadButton = new JButton("Upload");
+        JButton refreshButton = new JButton("Refresh links");
         JButton settingsButton = new JButton("Settings");
 
         // Ustawienie większej czcionki dla napisów na przyciskach
         Font largerFont = new Font(downloadButton.getFont().getName(), Font.PLAIN, 18);
         downloadButton.setFont(largerFont);
         uploadButton.setFont(largerFont);
+        refreshButton.setFont(largerFont);
         settingsButton.setFont(largerFont);
 
         // Dodanie akcji do przycisków
@@ -117,6 +120,37 @@ public class StartGUI extends JFrame {
             }
         });
 
+        refreshButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Settings settings = Main.getSettings();
+
+                //Sprawdzanie ustawień
+                if (settings == null) {
+                    try {
+                        Main.showSettingsGUI(StartGUI.this, true);
+                        settings = Main.getSettings();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(StartGUI.this, "Wystąpił błąd podczas zapisywania ustawień. \nSzczegóły błędu:\n" + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                }
+
+                File fileToOpen = openFileSelectionGUI("*.json");
+                if (fileToOpen != null) {
+                    try {
+                        AttachmentRefresher refresher = new AttachmentRefresher(settings.getWebhookUrl());
+                        refresher.refreshAttachments(fileToOpen);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(StartGUI.this,
+                                "Wystąpił błąd podczs ładowania pliku. Upewnij się czy wybrałeś poprawny plik. \nSzczegóły błędu: \n" + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
+
         settingsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -136,6 +170,7 @@ public class StartGUI extends JFrame {
         // Dodanie przycisków do kontenera
         container.add(downloadButton);
         container.add(uploadButton);
+        container.add(refreshButton);
         container.add(settingsButton);
     }
 
