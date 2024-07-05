@@ -52,16 +52,19 @@ public class DiscordFileStruct {
         this.parts = parts;
     }
 
-    /*
-    Sprawdza poprawność wartości.
-    Można użyć kiedy nie ma się pewności czy załadowany json
-    ma strukturę tej klasy.
+    /**
+     * Sprawdza poprawność wartości.
+     * Można użyć kiedy nie ma się pewności czy załadowany json
+     * ma strukturę tej klasy.
+     * @return czy poprawnie załadowano plik
      */
     public boolean isValid() {
         return (fileVersion > 0) && (fileSize > 0) && (singlePartSize > 0) && (originalFileName != null) && (sha256Hash != null) && (parts != null) && (!parts.isEmpty());
     }
 
-    //Sprawdza czy żaden link nie stracił ważności
+    /**
+     * Sprawdza, czy przynajmniej jeden link stracił ważności
+     */
     public boolean isExpired() {
         for (DiscordFilePart part : parts) {
             if (part.getAttachmentAuth().isExpired()) {

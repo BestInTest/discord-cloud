@@ -100,7 +100,8 @@ public class StartGUI extends JFrame {
 
                     /*
                     W przypadku kontynuacji wysyłania plik może zostać wysłany na inny webhook,
-                     lecz nie powinno to powodować problemu z późniejszym pobieraniem.
+                     lecz nie powinno to powodować problemu z późniejszym pobieraniem. - po zmianach w API jest problem
+                     //todo: dodać do readme że w przypadku kontynuacji wysyłania należy się upewnić że wysyła się na ten sam webhook/kanał
                      */
                     try {
                         WebHookManager fm = new WebHookManager(settings.getWebhookUrl(), chunkSize);

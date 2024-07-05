@@ -1,6 +1,7 @@
 package yo.men.discordcloud.structure;
 
 import okhttp3.*;
+import yo.men.discordcloud.Logger;
 import yo.men.discordcloud.Main;
 import yo.men.discordcloud.gui.ProgressGUI;
 import yo.men.discordcloud.structure.attachment.DiscordAttachment;
@@ -13,6 +14,7 @@ import javax.swing.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.Stack;
 
 public class WebHookManager {
@@ -115,41 +117,42 @@ public class WebHookManager {
 
                                 //nieznany błąd pomimo prób wysyłania
                                 System.err.println("Wystąpił nieznany błąd HTTP: " + responseCode);
+                            } catch (SocketTimeoutException ignored) {
+                                Logger.err(this.getClass(), "Socket timeout");
+                                continue;
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 //todo powiadomienie i przerwanie wysyłania
-                            } finally {
-                                //mysle ze ten kod mozna dac poza blok finally
-                                if (success) {
-                                    if (discordResponse != null && discordResponse.getAttachments() != null && !discordResponse.getAttachments().isEmpty()) {
-                                        DiscordAttachment attachment = discordResponse.getAttachments().get(0);
-                                        String messageId = discordResponse.getId();
-                                        FileHelper.saveUploadedFile(partFile, file, messageId, attachment.getUrl(), success);
-                                        System.out.println("Wysłano plik: " + partFile.getName() + " (ID wiadomości: " + messageId + ")");
-                                        System.out.println("URL pliku: " + attachment.getUrl());
-                                        partFile.delete(); // usuwanie pliku tymczasowego
+                            }
+                        }
+                        if (success) {
+                            if (discordResponse != null && discordResponse.getAttachments() != null && !discordResponse.getAttachments().isEmpty()) {
+                                DiscordAttachment attachment = discordResponse.getAttachments().get(0);
+                                String messageId = discordResponse.getId();
+                                FileHelper.saveUploadedFile(partFile, file, messageId, attachment.getUrl(), success);
+                                //System.out.println("Wysłano plik: " + partFile.getName() + " (ID wiadomości: " + messageId + ")");
+                                //System.out.println("URL pliku: " + attachment.getUrl());
+                                partFile.delete(); // usuwanie pliku tymczasowego
 
-                                        if (progressGUI.incrementProgress()) { // Sprawdzanie, czy zadanie zostało w całości zakończone
-                                            progressGUI.dispose();
-                                        }
-                                    } else {
-                                        //nie wiem czy tutaj dawać progressGUI.dispose();
-                                        JOptionPane.showMessageDialog(null,
-                                                "Wystąpił nieoczekiwany błąd. \nSzczegóły błędu: Invalid Discord response!", "Błąd", JOptionPane.ERROR_MESSAGE);
-                                        throw new RuntimeException("Invalid Discord response!");
-                                    }
-                                } else {
-                                    FileHelper.saveUploadedFile(partFile, file, null, null, success);
-
-                                    if (responseCode != 429 && responseCode != 502) { // ignore too many requests and gateway error
-                                        JOptionPane.showMessageDialog(null,
-                                                "Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + "\nHTTP code: " + responseCode + "\n\nProszę ponowić wysyłanie pliku", "Błąd", JOptionPane.ERROR_MESSAGE);
-                                        System.err.println("Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + " (HTTP code: " + responseCode + ")");
-                                        progressGUI.dispose();
-                                        forceClose(true);
-                                        return;
-                                    }
+                                if (progressGUI.incrementProgress()) { // Sprawdzanie, czy zadanie zostało w całości zakończone
+                                    progressGUI.dispose();
                                 }
+                            } else {
+                                //nie wiem czy tutaj dawać progressGUI.dispose();
+                                JOptionPane.showMessageDialog(null,
+                                        "Wystąpił nieoczekiwany błąd. \nSzczegóły błędu: Invalid Discord response!", "Błąd", JOptionPane.ERROR_MESSAGE);
+                                throw new RuntimeException("Invalid Discord response!");
+                            }
+                        } else {
+                            FileHelper.saveUploadedFile(partFile, file, null, null, success);
+
+                            if (responseCode != 429 && responseCode != 502) { // ignore too many requests and gateway error
+                                JOptionPane.showMessageDialog(null,
+                                        "Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + "\nHTTP code: " + responseCode + "\n\nProszę ponowić wysyłanie pliku", "Błąd", JOptionPane.ERROR_MESSAGE);
+                                System.err.println("Wystąpił błąd podczas wysyłania pliku " + partFile.getName() + " (HTTP code: " + responseCode + ")");
+                                progressGUI.dispose();
+                                forceClose(true);
+                                return;
                             }
                         }
 
@@ -161,6 +164,8 @@ public class WebHookManager {
                             "Nie można wysłać pliku. Upewnij się że ustawiony webhook jest poprawny. \nSzczegóły błędu: \n" + e.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
                     progressGUI.dispose();
                     forceClose(true);
+                } catch (SocketTimeoutException e) {
+                    e.printStackTrace();
                 } catch (Exception e) {
                     e.printStackTrace();
                     JOptionPane.showMessageDialog(null,
@@ -242,6 +247,8 @@ public class WebHookManager {
             public void run() {
                 try {
                     System.out.println("uploaded < total - " + (uploadedPartsCount < finalTotalPartsCount));
+                    //fixme: aby naprawić ten błąd niżej to chyba trzeba tutaj zmienić warunek pętli (jest "obracana" o 1 raz za dużo?)
+                    //ewentualnie może zrobić tam checka czy partNum == <coś> (ale nie wiem czy to nie będzie skutkowało jakimś błędem w dalszym kodzie)
                     for (int partNum = uploadedPartsCount; partNum < finalTotalPartsCount; partNum++) {
                         File partFile;
                         if (badUploads.isEmpty()) {
