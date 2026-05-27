@@ -1,0 +1,80 @@
+package bo.wii.discordcloud.core.utils;
+
+import java.io.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class FileMerger {
+
+    public static void mergeFiles(String folderPath, File outputFile) throws IOException {
+        File folder = new File(folderPath);
+        File[] partFiles = folder.listFiles((dir, name) -> name.matches(".+\\.part\\d+"));
+
+        if (partFiles == null || partFiles.length == 0) {
+            System.out.println("No files to merge in provided directory: " + folder.getAbsolutePath());
+            return;
+        }
+
+
+        Arrays.sort(partFiles, new Comparator<File>() {
+            @Override
+            public int compare(File file1, File file2) {
+                Pattern pattern = Pattern.compile("\\.part(\\d+)$");
+                Matcher matcher1 = pattern.matcher(file1.getName());
+                Matcher matcher2 = pattern.matcher(file2.getName());
+
+                if (matcher1.find() && matcher2.find()) {
+                    int partNum1 = Integer.parseInt(matcher1.group(1));
+                    int partNum2 = Integer.parseInt(matcher2.group(1));
+                    return Integer.compare(partNum1, partNum2);
+                } else {
+                    // Filenames don't match the expected pattern
+                    return 0; // Default comparison (no sorting) if unable to extract part numbers
+                }
+            }
+        });
+
+        try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile))) {
+            for (File partFile : partFiles) {
+                try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(partFile))) {
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
+                }
+
+                // Removing chunk file
+                if (!partFile.delete()) {
+                    System.out.println("Could not delete file: " + partFile.getAbsolutePath());
+                }
+            }
+        }
+
+        //System.out.println("Files merged into: " + outputFile);
+    }
+
+    private static void sortPartFiles(File[] partFiles) {
+        for (int i = 0; i < partFiles.length - 1; i++) {
+            for (int j = i + 1; j < partFiles.length; j++) {
+                if (extractPartNumber(partFiles[j]) < extractPartNumber(partFiles[i])) {
+                    File temp = partFiles[i];
+                    partFiles[i] = partFiles[j];
+                    partFiles[j] = temp;
+                }
+            }
+        }
+    }
+
+    private static int extractPartNumber(File file) {
+        String fileName = file.getName();
+        int startIndex = fileName.lastIndexOf("part") + 4;
+        int endIndex = fileName.lastIndexOf(".");
+        String partNumberString = fileName.substring(startIndex, endIndex);
+
+        return Integer.parseInt(partNumberString);
+    }
+}

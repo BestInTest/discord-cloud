@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>bo.wii.discordcloud</groupId>
+        <artifactId>discord-cloud</artifactId>
+        <version>2.0</version>
+    </parent>
+
+    <artifactId>distribution</artifactId>
+    <packaging>pom</packaging>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>bo.wii.discordcloud</groupId>
+            <artifactId>gui</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>bo.wii.discordcloud</groupId>
+            <artifactId>core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>bo.wii.discordcloud</groupId>
+            <artifactId>downloader</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>bo.wii.discordcloud</groupId>
+            <artifactId>uploader</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>bo.wii.discordcloud</groupId>
+            <artifactId>deleter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>bo.wii.discordcloud</groupId>
+            <artifactId>cli-renderer</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>bo.wii.discordcloud</groupId>
+            <artifactId>thumbnail-provider-ffmpeg</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>bo.wii.discordcloud</groupId>
+            <artifactId>thumbnail-provider-image</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <!-- Download FFmpeg (LGPL)-->
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <version>1.13.0</version>
+                <configuration>
+                    <readTimeOut>300000</readTimeOut>
+                    <overwrite>false</overwrite> <!-- Don't download if file already exists -->
+                </configuration>
+                <executions>
+                    <!-- Linux x86_64 -->
+                    <execution>
+                        <id>download-ffmpeg-linux-x64</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-lgpl.tar.xz</url>
+                            <outputDirectory>${project.build.directory}/ffmpeg-raw/linux-x64</outputDirectory>
+                            <outputFileName>ffmpeg-linux-x64.tar.xz</outputFileName>
+                            <unpack>true</unpack>
+                        </configuration>
+                    </execution>
+                    <!-- Linux arm64 -->
+                    <execution>
+                        <id>download-ffmpeg-linux-arm64</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linuxarm64-lgpl.tar.xz</url>
+                            <outputDirectory>${project.build.directory}/ffmpeg-raw/linux-arm64</outputDirectory>
+                            <outputFileName>ffmpeg-linux-arm64.tar.xz</outputFileName>
+                            <unpack>true</unpack>
+                        </configuration>
+                    </execution>
+                    <!-- Windows x86_64 -->
+                    <execution>
+                        <id>download-ffmpeg-windows-x64</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-lgpl.zip</url>
+                            <outputDirectory>${project.build.directory}/ffmpeg-raw/windows-x64</outputDirectory>
+                            <outputFileName>ffmpeg-windows-x64.zip</outputFileName>
+                            <unpack>true</unpack>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Kopiowanie ffmpeg i ffprobe do docelowych katalogów -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>collect-ffmpeg-binaries</id>
+                        <phase>process-resources</phase>
+                        <goals><goal>run</goal></goals>
+                        <configuration>
+                            <target>
+                                <!-- Linux x64 -->
+                                <mkdir dir="${project.build.directory}/ffmpeg/linux-x64"/>
+                                <copy todir="${project.build.directory}/ffmpeg/linux-x64" flatten="true">
+                                    <fileset dir="${project.build.directory}/ffmpeg-raw/linux-x64">
+                                        <include name="**/bin/ffmpeg"/>
+                                        <include name="**/bin/ffprobe"/>
+                                        <include name="**/LICENSE.txt"/>
+                                    </fileset>
+                                </copy>
+                                <chmod dir="${project.build.directory}/ffmpeg/linux-x64" perm="755" includes="ffmpeg,ffprobe"/>
+
+                                <!-- Linux arm64 -->
+                                <mkdir dir="${project.build.directory}/ffmpeg/linux-arm64"/>
+                                <copy todir="${project.build.directory}/ffmpeg/linux-arm64" flatten="true">
+                                    <fileset dir="${project.build.directory}/ffmpeg-raw/linux-arm64">
+                                        <include name="**/bin/ffmpeg"/>
+                                        <include name="**/bin/ffprobe"/>
+                                        <include name="**/LICENSE.txt"/>
+                                    </fileset>
+                                </copy>
+                                <chmod dir="${project.build.directory}/ffmpeg/linux-arm64" perm="755" includes="ffmpeg,ffprobe"/>
+
+                                <!-- Windows x64 -->
+                                <mkdir dir="${project.build.directory}/ffmpeg/windows-x64"/>
+                                <copy todir="${project.build.directory}/ffmpeg/windows-x64" flatten="true">
+                                    <fileset dir="${project.build.directory}/ffmpeg-raw/windows-x64">
+                                        <include name="**/bin/ffmpeg.exe"/>
+                                        <include name="**/bin/ffprobe.exe"/>
+                                        <include name="**/LICENSE.txt"/>
+                                    </fileset>
+                                </copy>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.4.1</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${maven.multiModuleProjectDirectory}/build</directory>
+                            <includes>
+                                <include>discord-cloud-${project.version}-*.zip</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.7.1</version>
+                <configuration>
+                    <appendAssemblyId>true</appendAssemblyId>
+                    <finalName>discord-cloud-${project.version}</finalName>
+                    <outputDirectory>${maven.multiModuleProjectDirectory}/build</outputDirectory>
+                </configuration>
+                <executions>
+                    <!-- without ffmpeg/ffprobe -->
+                    <execution>
+                        <id>make-distribution-slim</id>
+                        <phase>package</phase>
+                        <goals><goal>single</goal></goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/distribution-slim.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>make-distribution-linux-x64</id>
+                        <phase>package</phase>
+                        <goals><goal>single</goal></goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/distribution-linux-x64.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>make-distribution-linux-arm64</id>
+                        <phase>package</phase>
+                        <goals><goal>single</goal></goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/distribution-linux-arm64.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>make-distribution-windows-x64</id>
+                        <phase>package</phase>
+                        <goals><goal>single</goal></goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/distribution-windows-x64.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
