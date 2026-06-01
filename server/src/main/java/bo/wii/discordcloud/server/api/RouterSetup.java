@@ -37,25 +37,25 @@ public class RouterSetup {
                         + " | IP: " + ctx.ip()
                         + " | UA: " + shortUserAgent(ctx.userAgent())));
 
-        // Web UI static resources
+        app.post("/api/auth",   authController::handleLogin);
+        app.post("/api/logout", authController::handleLogout);
+        app.get("/api/files", filesController::handleListFiles);
+        app.get("/file/{filename}", fileStreamController::handleFileStream);
+
+
+        // static resources
         app.get("/", ctx -> resource(ctx, "/index.html", "text/html"));
         app.get("/app.css", ctx -> resource(ctx, "/app.css", "text/css"));
         app.get("/app.js", ctx -> resource(ctx, "/app.js", "application/javascript"));
+        app.get("/icons/{filename}", ctx -> {
+            String filename = ctx.pathParam("filename");
+            resource(ctx, "/icons/" + filename, "image/svg+xml");
+        });
 
-        // Authentication
-        app.post("/api/auth",   authController::handleLogin);
-        app.post("/api/logout", authController::handleLogout);
-
-        // File listing
-        app.get("/api/files", filesController::handleListFiles);
-
-        // File streaming
-        app.get("/file/{filename}", fileStreamController::handleFileStream);
 
         // error handler for unhandled exceptions
         app.exception(Exception.class, (e, ctx) -> {
-            Logger.error(RouterSetup.class, "Unhandled exception for "
-                    + ctx.method() + " " + ctx.path() + ": " + e.getMessage());
+            Logger.error(RouterSetup.class, "Unhandled exception for " + ctx.method() + " " + ctx.path() + ": " + e.getMessage());
             ctx.status(500).result("Internal server error");
         });
     }
