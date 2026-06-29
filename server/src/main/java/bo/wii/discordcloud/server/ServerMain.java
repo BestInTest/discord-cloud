@@ -5,6 +5,7 @@ import bo.wii.discordcloud.server.api.RouterSetup;
 import bo.wii.discordcloud.server.auth.LoginRateLimiter;
 import bo.wii.discordcloud.server.auth.SessionManager;
 import bo.wii.discordcloud.server.auth.TokenManager;
+import bo.wii.discordcloud.server.cache.ChunkCache;
 import bo.wii.discordcloud.server.cli.ArgsParser;
 import bo.wii.discordcloud.server.cli.CliPrinter;
 import bo.wii.discordcloud.server.cli.ParsedArgs;
@@ -52,7 +53,7 @@ public class ServerMain {
         boolean ssl = config.isSsl();
         boolean prefetch = config.isPrefetchEnabled();
 
-        // Validate SSL keystore settings before starting
+        // Validate SSL settings
         if (ssl) {
             if (config.getKeystoreFilePath().isBlank() || "path/to/keystore.p12".equals(config.getKeystoreFilePath())) {
                 Logger.error(ServerMain.class, "SSL enabled but keystoreFilePath is not configured.");
@@ -77,6 +78,16 @@ public class ServerMain {
                 config.isRequireToken(),
                 tokenManager != null ? tokenManager.getTokenCount() : 0);
 
+        ChunkCache chunkCache = null;
+        if (config.isChunkCacheEnabled()) {
+            chunkCache = new ChunkCache(config.getCacheDirectory(), config.getChunkCacheMaxSizeMb(), config.getChunkCacheTtlMinutes());
+            Logger.info(ServerMain.class, "Chunk cache enabled (max " + config.getChunkCacheMaxSizeMb() + " MB"
+                    + ", TTL " + config.getChunkCacheTtlMinutes() + " min"
+                    + ", dir: " + config.getCacheDirectory() + ")");
+            final ChunkCache cacheRef = chunkCache;
+            Runtime.getRuntime().addShutdownHook(new Thread(cacheRef::shutdown, "chunk-cache-shutdown"));
+        }
+
         final boolean finalSsl = ssl;
         final String finalHost = host;
         final int finalPort = port;
@@ -90,7 +101,7 @@ public class ServerMain {
             }
         });
 
-        RouterSetup router = new RouterSetup(config, tokenManager, sessionManager, rateLimiter);
+        RouterSetup router = new RouterSetup(config, tokenManager, sessionManager, rateLimiter, chunkCache);
         router.registerRoutes(app);
 
         app.start(host, port);
@@ -115,9 +126,6 @@ public class ServerMain {
         return connector;
     }
 
-    /**
-     * Handles --generate-token and --remove-token commands and exits.
-     */
     private static void handleTokenCommands(ParsedArgs parsed) {
         ServerConfig config = new ServerConfig(CONFIG_FILE);
         TokenManager tokenManager = new TokenManager(config.getTokenFile());

@@ -17,7 +17,6 @@ public class ServerConfig {
     private String keystoreAlias;
     private String webhook;
     private String botToken;
-    private boolean autoRemoveDownloadedFiles;
     private boolean prefetchEnabled;
     private boolean requireToken;
     private int sessionDurationSeconds;
@@ -26,6 +25,10 @@ public class ServerConfig {
     private String cacheDirectory;
     private int loginRateLimitMaxFailures;
     private int loginRateLimitWindowSeconds;
+    private boolean autoRemoveDownloadedFiles;
+    private boolean chunkCacheEnabled;
+    private int chunkCacheMaxSizeMb;
+    private int chunkCacheTtlMinutes;
 
     public ServerConfig(String configFile) {
         File file = new File(configFile);
@@ -52,7 +55,6 @@ public class ServerConfig {
         keystoreAlias = config.getString("alias", "cert");
         webhook = config.getString("webhook", "");
         botToken = config.getString("botToken", "");
-        autoRemoveDownloadedFiles = config.getBoolean("autoRemoveDownloadedFiles", true);
         prefetchEnabled = config.getBoolean("prefetch", true);
         requireToken = config.getBoolean("requireToken", false);
         sessionDurationSeconds = config.getInt("sessionDurationSeconds", 43200);
@@ -61,6 +63,10 @@ public class ServerConfig {
         cacheDirectory = config.getString("cacheDirectory", ".server-cache");
         loginRateLimitMaxFailures = config.getInt("loginRateLimitMaxFailures", 10);
         loginRateLimitWindowSeconds = config.getInt("loginRateLimitWindowSeconds", 600);
+        autoRemoveDownloadedFiles = config.getBoolean("autoRemoveDownloadedFiles", true);
+        chunkCacheEnabled = config.getBoolean("chunkCache.enabled", false);
+        chunkCacheMaxSizeMb = config.getInt("chunkCache.maxSizeMb", 256);
+        chunkCacheTtlMinutes = config.getInt("chunkCache.ttlMinutes", 30);
     }
 
     private void createDefaultConfig(File f) {
@@ -86,9 +92,6 @@ public class ServerConfig {
         config.set("botToken", "");
         config.setComments("botToken", Arrays.asList("", "Discord bot token used to refresh links for files uploaded in BOT mode.", "Can be left empty if you only serve WEBHOOK-mode files."));
 
-        config.set("autoRemoveDownloadedFiles", true);
-        config.setComments("autoRemoveDownloadedFiles", Arrays.asList("", "Delete temporary downloaded chunks after sending them to the client.", "Default: true"));
-
         config.set("prefetch", true);
         config.setComments("prefetch", Arrays.asList("", "Enable part prefetching for faster sequential streaming.", "Default: true"));
 
@@ -112,6 +115,30 @@ public class ServerConfig {
 
         config.set("loginRateLimitWindowSeconds", 600);
         config.setComments("loginRateLimitWindowSeconds", Arrays.asList("Time window (in seconds) for counting failures."));
+
+        config.set("autoRemoveDownloadedFiles", true);
+        config.setComments("autoRemoveDownloadedFiles", Arrays.asList("", "Delete temporary downloaded chunks after sending them to the client.", "Default: true"));
+
+        config.set("chunkCache.enabled", true);
+        config.setComments("chunkCache", Arrays.asList(
+                "",
+                "Keeps frequently downloaded chunks on disk to avoid re-fetching them from Discord.",
+                "Chunks are retained based on how often they are accessed.",
+                "When enabled, autoRemoveDownloadedFiles is overridden and cache manages chunk lifecycle.",
+                "Default: true"));
+
+        config.set("chunkCache.maxSizeMb", 256);
+        config.setComments("chunkCache.maxSizeMb", Arrays.asList(
+                "Maximum total disk space (in MB) that all cached chunks may occupy.",
+                "When exceeded, the least recently used chunks are removed first.",
+                "Default: 256"));
+
+        config.set("chunkCache.ttlMinutes", 30);
+        config.setComments("chunkCache.ttlMinutes", Arrays.asList(
+                "How many minutes of inactivity before a chunk is considered stale and deleted.",
+                "The timer resets every time the chunk is served to a client.",
+                "Set to 0 to disable TTL cleanup (chunks are only removed when the size limit is hit).",
+                "Default: 30"));
 
         try {
             config.save(f);
@@ -183,10 +210,6 @@ public class ServerConfig {
         return botToken;
     }
 
-    public boolean isAutoRemoveDownloadedFiles() {
-        return autoRemoveDownloadedFiles;
-    }
-
     public boolean isPrefetchEnabled() {
         return prefetchEnabled;
     }
@@ -217,5 +240,21 @@ public class ServerConfig {
 
     public int getLoginRateLimitWindowSeconds() {
         return loginRateLimitWindowSeconds;
+    }
+
+    public boolean isAutoRemoveDownloadedFiles() {
+        return autoRemoveDownloadedFiles;
+    }
+
+    public boolean isChunkCacheEnabled() {
+        return chunkCacheEnabled;
+    }
+
+    public int getChunkCacheMaxSizeMb() {
+        return chunkCacheMaxSizeMb;
+    }
+
+    public int getChunkCacheTtlMinutes() {
+        return chunkCacheTtlMinutes;
     }
 }

@@ -8,6 +8,7 @@ import bo.wii.discordcloud.core.structure.FileStruct;
 import bo.wii.discordcloud.core.utils.FileHelper;
 import bo.wii.discordcloud.server.auth.SessionManager;
 import bo.wii.discordcloud.server.auth.TokenManager;
+import bo.wii.discordcloud.server.cache.ChunkCache;
 import bo.wii.discordcloud.server.config.ServerConfig;
 import io.javalin.http.Context;
 
@@ -22,12 +23,14 @@ public class FileStreamController {
     private final ServerConfig config;
     private final TokenManager tokenManager;
     private final SessionManager sessionManager;
+    private final ChunkCache chunkCache; // null if disabled
 
     public FileStreamController(ServerConfig config, TokenManager tokenManager,
-                                SessionManager sessionManager) {
+                                SessionManager sessionManager, ChunkCache chunkCache) {
         this.config = config;
         this.tokenManager = tokenManager;
         this.sessionManager = sessionManager;
+        this.chunkCache = chunkCache;
     }
 
     /**
@@ -130,7 +133,7 @@ public class FileStreamController {
         ctx.header("Content-Length", String.valueOf(contentLength));
         ctx.contentType(ApiUtil.getContentType(structure.getOriginalFileName()));
 
-        // Determine which parts of the file we need
+        // Determine which parts of the file are needed
         int startPartIndex = (int) (start / partSize);
         int endPartIndex = (int) (end / partSize);
         long bytesToSkip = start % partSize;
@@ -150,7 +153,8 @@ public class FileStreamController {
         MultiPartInputStream stream = new MultiPartInputStream(
                 downloader, structure,
                 startPartIndex, endPartIndex, bytesToSkip, contentLength,
-                config.getCacheDirectory(), config.isAutoRemoveDownloadedFiles());
+                config.getCacheDirectory(), config.isAutoRemoveDownloadedFiles(),
+                chunkCache);
 
         // Javalin reads the stream and writes it to the response
         ctx.result(stream);

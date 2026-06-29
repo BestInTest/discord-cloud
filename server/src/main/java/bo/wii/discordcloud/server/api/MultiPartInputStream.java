@@ -2,6 +2,7 @@ package bo.wii.discordcloud.server.api;
 
 import bo.wii.discordcloud.core.services.download.DownloaderService;
 import bo.wii.discordcloud.core.structure.FileStruct;
+import bo.wii.discordcloud.server.cache.ChunkCache;
 
 import java.io.*;
 
@@ -11,6 +12,8 @@ public class MultiPartInputStream extends InputStream {
     private final FileStruct structure;
     private final String cacheDir;
     private final boolean autoDeleteParts;
+
+    private final ChunkCache chunkCache; // null if disabled
 
     private final int startPartIndex;
     private final int endPartIndex;
@@ -26,7 +29,8 @@ public class MultiPartInputStream extends InputStream {
     public MultiPartInputStream(DownloaderService downloader, FileStruct structure,
                                 int startPartIndex, int endPartIndex,
                                 long bytesToSkipInFirstPart, long contentLength,
-                                String cacheDir, boolean autoDeleteParts) {
+                                String cacheDir, boolean autoDeleteParts,
+                                ChunkCache chunkCache) {
         this.downloader = downloader;
         this.structure = structure;
         this.startPartIndex = startPartIndex;
@@ -35,6 +39,7 @@ public class MultiPartInputStream extends InputStream {
         this.contentLength = contentLength;
         this.cacheDir = cacheDir.endsWith("/") ? cacheDir : cacheDir + "/";
         this.autoDeleteParts = autoDeleteParts;
+        this.chunkCache = chunkCache;
         this.currentPartIndex = startPartIndex;
     }
 
@@ -90,8 +95,7 @@ public class MultiPartInputStream extends InputStream {
 
     // Downloads next part and opens an InputStream into it, skipping bytes if needed
     private void openNextPart() throws IOException {
-        if (currentPartIndex > endPartIndex
-                || currentPartIndex >= structure.getParts().size()) {
+        if (currentPartIndex > endPartIndex || currentPartIndex >= structure.getParts().size()) {
             currentPartStream = null;
             return;
         }
@@ -129,11 +133,16 @@ public class MultiPartInputStream extends InputStream {
             currentPartStream = null;
         }
 
-        if (autoDeleteParts && currentPartFile != null && currentPartFile.exists()) {
-            boolean deleted = currentPartFile.delete();
-            if (!deleted) {
-                // TODO: sprawdzić czy pliki będą się usuwać automatycznie bo jeśli nie to dysk będzie się zapychał
-                currentPartFile.deleteOnExit();
+        if (currentPartFile != null) {
+            if (chunkCache != null) {
+                if (currentPartFile.exists()) {
+                    chunkCache.recordAccess(currentPartFile.getName(), currentPartFile.length());
+                }
+            } else if (autoDeleteParts && currentPartFile.exists()) {
+                boolean deleted = currentPartFile.delete();
+                if (!deleted) {
+                    currentPartFile.deleteOnExit();
+                }
             }
             currentPartFile = null;
         }

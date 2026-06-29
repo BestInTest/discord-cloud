@@ -4,6 +4,7 @@ import bo.wii.discordcloud.core.Logger;
 import bo.wii.discordcloud.server.auth.LoginRateLimiter;
 import bo.wii.discordcloud.server.auth.SessionManager;
 import bo.wii.discordcloud.server.auth.TokenManager;
+import bo.wii.discordcloud.server.cache.ChunkCache;
 import bo.wii.discordcloud.server.config.ServerConfig;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -18,11 +19,12 @@ public class RouterSetup {
     private final FileStreamController fileStreamController;
 
     public RouterSetup(ServerConfig config, TokenManager tokenManager,
-                       SessionManager sessionManager, LoginRateLimiter rateLimiter) {
+                       SessionManager sessionManager, LoginRateLimiter rateLimiter,
+                       ChunkCache chunkCache) {
         this.config = config;
         this.authController = new AuthController(config, tokenManager, sessionManager, rateLimiter);
         this.filesController = new FilesController(config, tokenManager, sessionManager);
-        this.fileStreamController = new FileStreamController(config, tokenManager, sessionManager);
+        this.fileStreamController = new FileStreamController(config, tokenManager, sessionManager, chunkCache);
     }
 
     public void registerRoutes(Javalin app) {
