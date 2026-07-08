@@ -23,16 +23,38 @@ public class UploadBotTask {
     private final String channelId;
     private final int chunkSize;
     private final UploadProgressCallback callback;
+    private final String filesDirectory;
+    private final String destPath; //TODO: wykorzystać destPath i filesDirectory do wysyłania do wskazanego katalogu
     private volatile boolean stopped = false;
     private ThumbnailResolution thumbnailResolution = ThumbnailService.DEFAULT_RESOLUTION;
     private int thumbnailQuality = ThumbnailService.DEFAULT_QUALITY;
 
+    /**
+     * Creates a bot upload task without destination directory context.
+     * Resume detection will only look for .dscl files in the current working directory.
+     * Use {@link #UploadBotTask(File, String, String, int, UploadProgressCallback, String, String)}
+     * if you want to use other directories for resume detection (not uploading!).
+     */
     public UploadBotTask(File file, String botToken, String channelId, int chunkSize, UploadProgressCallback callback) {
+        this(file, botToken, channelId, chunkSize, callback, null, null);
+    }
+
+    /**
+     * Creates a bot upload task with destination directory context for resume detection.
+     *
+     * @param filesDirectory server's files directory (used only to locate an existing .dscl for resume,
+     *                       does NOT affect where the .dscl is created, it's always created in CWD first)
+     * @param destPath relative path inside filesDirectory where the .dscl would have been stored
+     */
+    public UploadBotTask(File file, String botToken, String channelId, int chunkSize, UploadProgressCallback callback,
+                         String filesDirectory, String destPath) {
         this.file = file;
         this.botToken = botToken;
         this.channelId = channelId;
         this.chunkSize = chunkSize;
         this.callback = callback;
+        this.filesDirectory = filesDirectory;
+        this.destPath = destPath;
     }
 
     public void setThumbnailResolution(ThumbnailResolution resolution) {
@@ -160,8 +182,20 @@ public class UploadBotTask {
 
     private FileStruct getExistingStructure() {
         try {
+            // check in destination directory
+            File destDscl = buildDestDsclFile();
+            if (destDscl != null) {
+                FileStruct loadedStruct = FileHelper.loadStructureFile(destDscl);
+                if (loadedStruct != null && loadedStruct.isValid()) {
+                    Logger.info(UploadBotTask.class, "Found existing .dscl in destination directory: " + destDscl.getAbsolutePath());
+                    return loadedStruct;
+                }
+            }
+
+            // fallback to cwd
             FileStruct loadedStruct = FileHelper.loadStructureFile(new File(file.getName()));
             if (loadedStruct != null && loadedStruct.isValid()) {
+                Logger.info(UploadBotTask.class, "Found existing .dscl in working directory");
                 return loadedStruct;
             } else if (loadedStruct != null) {
                 Logger.err(UploadBotTask.class, "Found existing structure file but failed to validate it.");
@@ -170,6 +204,22 @@ public class UploadBotTask {
             Logger.err(UploadBotTask.class, "Error loading existing structure: " + e.getMessage());
         }
         return null;
+    }
+
+    /**
+     * Builds the expected .dscl file path in the destination directory
+     * ({filesDirectory}/{destPath}/{filename}.dscl).
+     * Returns null if filesDirectory is not set.
+     */
+    private File buildDestDsclFile() {
+        if (filesDirectory == null || filesDirectory.isBlank()) {
+            return null;
+        }
+        File baseDir = new File(filesDirectory);
+        if (destPath != null && !destPath.trim().isEmpty()) {
+            return new File(new File(baseDir, destPath), file.getName() + FileHelper.STRUCTURE_EXTENSION);
+        }
+        return new File(baseDir, file.getName() + FileHelper.STRUCTURE_EXTENSION);
     }
 
     public void stop() {

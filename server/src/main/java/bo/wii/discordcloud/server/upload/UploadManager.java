@@ -106,14 +106,18 @@ public class UploadManager {
                         config.getBotToken(),
                         config.getChannelId(),
                         chunkBytes,
-                        callback);
+                        callback,
+                        config.getFilesDirectory(),
+                        destPath);
                 success = task.execute();
             } else {
                 UploadTask task = new UploadTask(
                         tempFile,
                         config.getWebhook(),
                         DiscordCloudCore.CHUNK_FILE_SIZE,
-                        callback);
+                        callback,
+                        config.getFilesDirectory(),
+                        destPath);
                 success = task.execute();
             }
 

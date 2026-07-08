@@ -187,12 +187,11 @@ public class UploadController {
         }
 
         // Delete any leftover .dscl from previous interrupted upload for this filename
-        //TODO: sprawdzić kontynuację uploadu, jeśli plik już istnieje
-        File leftoverDscl = new File(fileName + ".dscl");
+        /*File leftoverDscl = new File(fileName + ".dscl");
         if (leftoverDscl.exists()) {
             leftoverDscl.delete();
             Logger.info(UploadController.class, "Deleted leftover .dscl: " + leftoverDscl.getName());
-        }
+        }*/
 
         boolean started = uploadManager.startUpload(tempFile, destPath, uploadType, chunkSizeMb);
         if (!started) {

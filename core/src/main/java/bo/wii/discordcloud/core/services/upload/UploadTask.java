@@ -22,15 +22,37 @@ public class UploadTask {
     private final String webhookUrl;
     private final int chunkSize;
     private final UploadProgressCallback callback;
+    private final String filesDirectory;
+    private final String destPath;
     private volatile boolean stopped = false;
     private ThumbnailResolution thumbnailResolution = ThumbnailService.DEFAULT_RESOLUTION;
     private int thumbnailQuality = ThumbnailService.DEFAULT_QUALITY;
 
+    /**
+     * Creates a upload task without destination directory context.
+     * Resume detection will only look for .dscl files in the current working directory.
+     * Use {@link #UploadTask(File, String, int, UploadProgressCallback, String, String)}
+     * if you want to use other directories for resume detection (not uploading!).
+     */
     public UploadTask(File file, String webhookUrl, int chunkSize, UploadProgressCallback callback) {
+        this(file, webhookUrl, chunkSize, callback, null, null);
+    }
+
+    /**
+     * Creates a upload task with destination directory context for resume detection.
+     *
+     * @param filesDirectory server's files directory (used only to locate an existing .dscl for resume,
+     *                       does NOT affect where the .dscl is created, it's always created in CWD first)
+     * @param destPath relative path inside filesDirectory where the .dscl would have been stored
+     */
+    public UploadTask(File file, String webhookUrl, int chunkSize, UploadProgressCallback callback,
+                      String filesDirectory, String destPath) {
         this.file = file;
         this.webhookUrl = webhookUrl;
         this.chunkSize = chunkSize;
         this.callback = callback;
+        this.filesDirectory = filesDirectory;
+        this.destPath = destPath;
     }
 
     /**
@@ -164,8 +186,20 @@ public class UploadTask {
     
     private FileStruct getExistingStructure() {
         try {
+            // check in destination directory
+            File destDscl = buildDestDsclFile();
+            if (destDscl != null) {
+                FileStruct loadedStruct = FileHelper.loadStructureFile(destDscl);
+                if (loadedStruct != null && loadedStruct.isValid()) {
+                    Logger.info(UploadTask.class, "Found existing .dscl in destination directory: " + destDscl.getAbsolutePath());
+                    return loadedStruct;
+                }
+            }
+
+            // fallback to cwd
             FileStruct loadedStruct = FileHelper.loadStructureFile(new File(file.getName()));
             if (loadedStruct != null && loadedStruct.isValid()) {
+                Logger.info(UploadTask.class, "Found existing .dscl in working directory");
                 return loadedStruct;
             } else if (loadedStruct != null) {
                 Logger.err(UploadTask.class, "Found existing structure file but failed to validate it.");
@@ -177,8 +211,21 @@ public class UploadTask {
     }
     
     /**
-     * Stop the upload task
+     * Builds the expected .dscl file path in the destination directory
+     * ({filesDirectory}/{destPath}/{filename}.dscl).
+     * Returns null if filesDirectory is not set.
      */
+    private File buildDestDsclFile() {
+        if (filesDirectory == null || filesDirectory.isBlank()) {
+            return null;
+        }
+        File baseDir = new File(filesDirectory);
+        if (destPath != null && !destPath.trim().isEmpty()) {
+            return new File(new File(baseDir, destPath), file.getName() + FileHelper.STRUCTURE_EXTENSION);
+        }
+        return new File(baseDir, file.getName() + FileHelper.STRUCTURE_EXTENSION);
+    }
+
     public void stop() {
         stopped = true;
     }
