@@ -3,8 +3,8 @@ package bo.wii.discordcloud.server.cli;
 public class CliPrinter {
 
     public static void printBanner(String host, int port, boolean ssl, boolean prefetch, boolean requireToken, int tokenCount) {
-        String protocol = ssl ? "https" : "http";
-        String displayHost = "0.0.0.0".equals(host) ? "localhost" : host;
+        //String protocol = ssl ? "https" : "http";
+        //String displayHost = "0.0.0.0".equals(host) ? "localhost" : host;
 
         System.out.println("--------------------------------------");
         System.out.println("Host:     " + host);
@@ -13,8 +13,8 @@ public class CliPrinter {
         System.out.println("Prefetch: " + (prefetch ? "enabled" : "disabled"));
         System.out.println("Auth:     " + (requireToken ? "enabled (" + tokenCount + " token(s))" : "disabled"));
         System.out.println("--------------------------------------");
-        System.out.println("Access at: " + protocol + "://" + displayHost + ":" + port);
-        System.out.println("--------------------------------------");
+        //System.out.println("Access at: " + protocol + "://" + displayHost + ":" + port);
+        //System.out.println("--------------------------------------");
     }
 
     public static void printUsage() {
