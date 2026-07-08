@@ -17,6 +17,8 @@ public class ServerConfig {
     private String keystoreAlias;
     private String webhook;
     private String botToken;
+    private String channelId;
+    private int uploadChunkSizeMb;
     private boolean prefetchEnabled;
     private boolean requireToken;
     private int sessionDurationSeconds;
@@ -55,6 +57,8 @@ public class ServerConfig {
         keystoreAlias = config.getString("alias", "cert");
         webhook = config.getString("webhook", "");
         botToken = config.getString("botToken", "");
+        channelId = config.getString("channelId", "");
+        uploadChunkSizeMb = config.getInt("uploadChunkSizeMb", 10);
         prefetchEnabled = config.getBoolean("prefetch", true);
         requireToken = config.getBoolean("requireToken", false);
         sessionDurationSeconds = config.getInt("sessionDurationSeconds", 43200);
@@ -91,6 +95,16 @@ public class ServerConfig {
 
         config.set("botToken", "");
         config.setComments("botToken", Arrays.asList("", "Discord bot token used to refresh links for files uploaded in BOT mode.", "Can be left empty if you only serve WEBHOOK-mode files."));
+
+        config.set("channelId", "");
+        config.setComments("channelId", Arrays.asList("", "Discord channel ID used for bot-mode uploads via the web interface.",
+                "Required when uploading files using the BOT method.",
+                "Enable Developer Mode in Discord, right-click channel -> Copy ID"));
+
+        config.set("uploadChunkSizeMb", 10);
+        config.setComments("uploadChunkSizeMb", Arrays.asList("", "Default chunk size in MB used for bot-mode uploads via the web interface.",
+                "Does not apply to webhook uploads.",
+                "Default: 10"));
 
         config.set("prefetch", true);
         config.setComments("prefetch", Arrays.asList("", "Enable part prefetching for faster sequential streaming.", "Default: true"));
@@ -208,6 +222,14 @@ public class ServerConfig {
 
     public String getBotToken() {
         return botToken;
+    }
+
+    public String getChannelId() {
+        return channelId;
+    }
+
+    public int getUploadChunkSizeMb() {
+        return uploadChunkSizeMb;
     }
 
     public boolean isPrefetchEnabled() {

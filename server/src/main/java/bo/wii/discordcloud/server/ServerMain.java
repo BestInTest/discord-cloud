@@ -10,11 +10,14 @@ import bo.wii.discordcloud.server.cli.ArgsParser;
 import bo.wii.discordcloud.server.cli.CliPrinter;
 import bo.wii.discordcloud.server.cli.ParsedArgs;
 import bo.wii.discordcloud.server.config.ServerConfig;
+import bo.wii.discordcloud.server.upload.UploadManager;
 import io.javalin.Javalin;
+import jakarta.servlet.MultipartConfigElement;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
+import java.io.File;
 import java.io.IOException;
 
 public class ServerMain {
@@ -91,6 +94,9 @@ public class ServerMain {
         final boolean finalSsl = ssl;
         final String finalHost = host;
         final int finalPort = port;
+        final String uploadTempPath = new File(config.getCacheDirectory(), "upload-temp").getAbsolutePath();
+        new File(uploadTempPath).mkdirs();
+        UploadManager uploadManager = new UploadManager(config);
 
         Javalin app = Javalin.create(javalinConfig -> {
             javalinConfig.showJavalinBanner = false;
@@ -101,7 +107,21 @@ public class ServerMain {
             }
         });
 
-        RouterSetup router = new RouterSetup(config, tokenManager, sessionManager, rateLimiter, chunkCache);
+        app.before("/api/upload", ctx -> {
+            if (ctx.method().toString().equals("POST")) {
+                ctx.req().setAttribute(
+                        "org.eclipse.jetty.multipartConfig",
+                        new MultipartConfigElement(
+                                uploadTempPath,
+                                -1L, // maxFileSize //todo: do configu?
+                                -1L, // maxRequestSize
+                                64 * 1024 * 1024 // "buf"
+                        )
+                );
+            }
+        });
+
+        RouterSetup router = new RouterSetup(config, tokenManager, sessionManager, rateLimiter, chunkCache, uploadManager);
         router.registerRoutes(app);
 
         app.start(host, port);

@@ -6,6 +6,7 @@ import bo.wii.discordcloud.server.auth.SessionManager;
 import bo.wii.discordcloud.server.auth.TokenManager;
 import bo.wii.discordcloud.server.cache.ChunkCache;
 import bo.wii.discordcloud.server.config.ServerConfig;
+import bo.wii.discordcloud.server.upload.UploadManager;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
@@ -17,14 +18,18 @@ public class RouterSetup {
     private final AuthController authController;
     private final FilesController filesController;
     private final FileStreamController fileStreamController;
+    private final UploadController uploadController;
+    private final FolderController folderController;
 
     public RouterSetup(ServerConfig config, TokenManager tokenManager,
                        SessionManager sessionManager, LoginRateLimiter rateLimiter,
-                       ChunkCache chunkCache) {
+                       ChunkCache chunkCache, UploadManager uploadManager) {
         this.config = config;
         this.authController = new AuthController(config, tokenManager, sessionManager, rateLimiter);
         this.filesController = new FilesController(config, tokenManager, sessionManager);
         this.fileStreamController = new FileStreamController(config, tokenManager, sessionManager, chunkCache);
+        this.uploadController = new UploadController(config, tokenManager, sessionManager, uploadManager);
+        this.folderController = new FolderController(config, tokenManager, sessionManager);
     }
 
     public void registerRoutes(Javalin app) {
@@ -43,7 +48,12 @@ public class RouterSetup {
         app.post("/api/logout", authController::handleLogout);
         app.get("/api/files", filesController::handleListFiles);
         app.get("/file/{filename}", fileStreamController::handleFileStream);
-
+        app.get("/api/upload/methods", uploadController::handleMethods);
+        app.get("/api/upload/status", uploadController::handleStatus);
+        app.post("/api/upload/reset", uploadController::handleReset);
+        app.post("/api/upload", uploadController::handleUpload);
+        app.post("/api/folder/create", folderController::handleCreate);
+        app.post("/api/folder/rename", folderController::handleRename);
 
         // static resources
         app.get("/", ctx -> resource(ctx, "/index.html", "text/html"));
