@@ -79,7 +79,7 @@ public class UploadManager {
                 @Override
                 public void onLog(String msg) {
                     s.logs.add(msg);
-                    Logger.info(UploadManager.class, "[upload] " + msg);
+                    Logger.info(UploadManager.class, msg);
                 }
                 @Override
                 public void onProgress(int cur, int total) {
@@ -89,11 +89,11 @@ public class UploadManager {
                 @Override
                 public void onError(String msg) {
                     s.logs.add("ERROR: " + msg);
-                    Logger.error(UploadManager.class, "[upload] " + msg);
+                    Logger.error(UploadManager.class, msg);
                 }
                 @Override
                 public void onComplete(String structFile) {
-                    s.logs.add("Structure saved: " + structFile);
+                    //s.logs.add("Structure saved: " + structFile);
                 }
             };
 
