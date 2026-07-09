@@ -180,7 +180,11 @@ public class UploadTask {
         
         if (!stopped) {
             callback.onLog("Generating thumbnail...");
-            uploader.generateThumbnailForFile(file, thumbnailResolution, thumbnailQuality);
+            if (existingStruct.getThumbnailBase64() == null) {
+                uploader.generateThumbnailForFile(file, thumbnailResolution, thumbnailQuality);
+            } else {
+                callback.onLog("Thumbnail already exists");
+            }
         }
     }
     
