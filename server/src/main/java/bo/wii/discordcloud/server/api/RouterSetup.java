@@ -39,10 +39,14 @@ public class RouterSetup {
         });
 
         // Log every incoming request
-        app.before(ctx -> Logger.info(RouterSetup.class,
-                "Request | " + ctx.method() + " " + ctx.path()
-                        + " | IP: " + ctx.ip()
-                        + " | UA: " + shortUserAgent(ctx.userAgent())));
+        app.before(ctx -> {
+            if (!shouldSkipLogging(ctx)) { // ignore upload status endpoint because too much spam in console
+                Logger.info(RouterSetup.class,
+                        "Request | " + ctx.method() + " " + ctx.path()
+                                + " | IP: " + ctx.ip()
+                                + " | UA: " + shortUserAgent(ctx.userAgent()));
+            }
+        });
 
         app.post("/api/auth",   authController::handleLogin);
         app.post("/api/logout", authController::handleLogout);
@@ -88,5 +92,9 @@ public class RouterSetup {
             Logger.error(RouterSetup.class, "Failed to serve resource " + resource + ": " + e.getMessage());
             ctx.status(500).result("Internal server error");
         }
+    }
+
+    private static boolean shouldSkipLogging(Context ctx) {
+        return ctx.method().name().equals("GET") && ctx.path().equals("/api/upload/status");
     }
 }
