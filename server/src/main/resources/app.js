@@ -80,6 +80,17 @@ function buildFileUrl(entry) {
     return dir ? `${base}?path=${encodeURIComponent(dir)}` : base;
 }
 
+function encodeHashPath(path) {
+    if (!path) return '';
+    return path.split('/').map(segment => encodeURIComponent(segment)).join('/');
+}
+
+function decodeHashPath(hash) {
+    const value = hash.replace(/^#/, '');
+    if (!value) return '';
+    return value.split('/').map(segment => decodeURIComponent(segment)).join('/');
+}
+
 
 const Api = {
     async listFiles(path) {
@@ -457,7 +468,7 @@ async function navigate(path) {
     renderLoading();
 
     // Reflect the current path in the URL hash for browser history support
-    history.pushState(null, '', currentPath ? `#${currentPath}` : '#');
+    history.pushState(null, '', currentPath ? `#${encodeHashPath(currentPath)}` : '#');
 
     try {
         const entries = await Api.listFiles(currentPath);
@@ -473,7 +484,7 @@ async function navigate(path) {
 
 // back/forward support
 window.addEventListener('popstate', () => {
-    const path = window.location.hash.replace(/^#/, '');
+    const path = decodeHashPath(window.location.hash);
     navigate(path);
 });
 
@@ -859,7 +870,7 @@ ui.uploadOverlay.addEventListener('click', async e => {
 async function boot() {
     await loadIcons();
 
-    const initialPath = window.location.hash.replace(/^#/, '');
+    const initialPath = decodeHashPath(window.location.hash);
 
     // If upload was in progress before page refresh, reconnect to it
     try {

@@ -161,6 +161,7 @@ public class UploadManager {
         File dsclDest = new File(destDir, originalFileName + FileHelper.STRUCTURE_EXTENSION);
 
         if (!dsclSource.exists()) {
+            //FIXME: błąd kiedy wznawia się wysyłanie bo wtedy plik dscl jest w innym miejscu, na razie można ignorować
             throw new IOException("Structure file not found: " + dsclSource.getAbsolutePath());
         }
 
