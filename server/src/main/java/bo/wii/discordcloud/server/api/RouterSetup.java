@@ -7,8 +7,8 @@ import bo.wii.discordcloud.server.auth.TokenManager;
 import bo.wii.discordcloud.server.cache.ChunkCache;
 import bo.wii.discordcloud.server.config.ServerConfig;
 import bo.wii.discordcloud.server.upload.UploadManager;
-import io.javalin.Javalin;
 import io.javalin.http.Context;
+import io.javalin.router.JavalinDefaultRoutingApi;
 
 import java.io.InputStream;
 
@@ -32,14 +32,14 @@ public class RouterSetup {
         this.folderController = new FolderController(config, tokenManager, sessionManager);
     }
 
-    public void registerRoutes(Javalin app) {
-        app.before(ctx -> {
+    public void registerRoutes(JavalinDefaultRoutingApi routes) {
+        routes.before(ctx -> {
             ctx.header("X-Content-Type-Options", "nosniff");
             ctx.header("X-Frame-Options", "DENY");
         });
 
         // Log every incoming request
-        app.before(ctx -> {
+        routes.before(ctx -> {
             if (!shouldSkipLogging(ctx)) { // ignore upload status endpoint because too much spam in console
                 Logger.info(RouterSetup.class,
                         "Request | " + ctx.method() + " " + ctx.path()
@@ -48,29 +48,29 @@ public class RouterSetup {
             }
         });
 
-        app.post("/api/auth",   authController::handleLogin);
-        app.post("/api/logout", authController::handleLogout);
-        app.get("/api/files", filesController::handleListFiles);
-        app.get("/file/{filename}", fileStreamController::handleFileStream);
-        app.get("/api/upload/methods", uploadController::handleMethods);
-        app.get("/api/upload/status", uploadController::handleStatus);
-        app.post("/api/upload/reset", uploadController::handleReset);
-        app.post("/api/upload", uploadController::handleUpload);
-        app.post("/api/folder/create", folderController::handleCreate);
-        app.post("/api/folder/rename", folderController::handleRename);
+        routes.post("/api/auth", authController::handleLogin);
+        routes.post("/api/logout", authController::handleLogout);
+        routes.get("/api/files", filesController::handleListFiles);
+        routes.get("/file/{filename}", fileStreamController::handleFileStream);
+        routes.get("/api/upload/methods", uploadController::handleMethods);
+        routes.get("/api/upload/status", uploadController::handleStatus);
+        routes.post("/api/upload/reset", uploadController::handleReset);
+        routes.post("/api/upload", uploadController::handleUpload);
+        routes.post("/api/folder/create", folderController::handleCreate);
+        routes.post("/api/folder/rename", folderController::handleRename);
 
         // static resources
-        app.get("/", ctx -> resource(ctx, "/index.html", "text/html"));
-        app.get("/app.css", ctx -> resource(ctx, "/app.css", "text/css"));
-        app.get("/app.js", ctx -> resource(ctx, "/app.js", "application/javascript"));
-        app.get("/icons/{filename}", ctx -> {
+        routes.get("/", ctx -> resource(ctx, "/index.html", "text/html"));
+        routes.get("/app.css", ctx -> resource(ctx, "/app.css", "text/css"));
+        routes.get("/app.js", ctx -> resource(ctx, "/app.js", "application/javascript"));
+        routes.get("/icons/{filename}", ctx -> {
             String filename = ctx.pathParam("filename");
             resource(ctx, "/icons/" + filename, "image/svg+xml");
         });
 
 
         // error handler for unhandled exceptions
-        app.exception(Exception.class, (e, ctx) -> {
+        routes.exception(Exception.class, (e, ctx) -> {
             Logger.error(RouterSetup.class, "Unhandled exception for " + ctx.method() + " " + ctx.path() + ": " + e.getMessage());
             ctx.status(500).result("Internal server error");
         });

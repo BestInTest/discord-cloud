@@ -98,31 +98,32 @@ public class ServerMain {
         new File(uploadTempPath).mkdirs();
         UploadManager uploadManager = new UploadManager(config);
 
+        RouterSetup router = new RouterSetup(config, tokenManager, sessionManager, rateLimiter, chunkCache, uploadManager);
+
         Javalin app = Javalin.create(javalinConfig -> {
-            javalinConfig.showJavalinBanner = false;
+            javalinConfig.startup.showJavalinBanner = false;
 
             if (finalSsl) {
                 javalinConfig.jetty.addConnector((server, httpConfig) ->
                         buildSslConnector(server, httpConfig, config, finalHost, finalPort));
             }
-        });
 
-        app.before("/api/upload", ctx -> {
-            if (ctx.method().toString().equals("POST")) {
-                ctx.req().setAttribute(
-                        "org.eclipse.jetty.multipartConfig",
-                        new MultipartConfigElement(
-                                uploadTempPath,
-                                -1L, // maxFileSize //todo: do configu?
-                                -1L, // maxRequestSize
-                                64 * 1024 * 1024 // "buf"
-                        )
-                );
-            }
-        });
+            javalinConfig.routes.before("/api/upload", ctx -> {
+                if (ctx.method().toString().equals("POST")) {
+                    ctx.req().setAttribute(
+                            "org.eclipse.jetty.multipartConfig",
+                            new MultipartConfigElement(
+                                    uploadTempPath,
+                                    -1L, // maxFileSize //todo: do configu?
+                                    -1L, // maxRequestSize
+                                    64 * 1024 * 1024 // "buf"
+                            )
+                    );
+                }
+            });
 
-        RouterSetup router = new RouterSetup(config, tokenManager, sessionManager, rateLimiter, chunkCache, uploadManager);
-        router.registerRoutes(app);
+            router.registerRoutes(javalinConfig.routes);
+        });
 
         app.start(host, port);
     }

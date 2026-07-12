@@ -12,35 +12,33 @@ public class ApiUtil {
 
     private static final Gson GSON = new Gson();
 
-    // MIME types by file extension (https://www.iana.org/assignments/media-types/)
+    // https://www.iana.org/assignments/media-types/media-types.xhtml
     private static final Map<String, String> CONTENT_TYPES = Map.ofEntries(
-            Map.entry("jpg",  "image/jpeg"),
+            Map.entry("jpg", "image/jpeg"),
             Map.entry("jpeg", "image/jpeg"),
-            Map.entry("png",  "image/png"),
-            Map.entry("gif",  "image/gif"),
+            Map.entry("png", "image/png"),
+            Map.entry("gif", "image/gif"),
             Map.entry("webp", "image/webp"),
-            Map.entry("bmp",  "image/bmp"),
-            Map.entry("ico",  "image/x-icon"),
-            Map.entry("svg",  "image/svg+xml"),
-            Map.entry("mp3",  "audio/mpeg"),
-            Map.entry("wav",  "audio/wav"),
-            Map.entry("ogg",  "audio/ogg"),
-            Map.entry("mp4",  "video/mp4"),
+            Map.entry("bmp", "image/bmp"),
+            Map.entry("ico", "image/x-icon"),
+            Map.entry("svg", "image/svg+xml"),
+            Map.entry("mp3", "audio/mpeg"),
+            Map.entry("wav", "audio/wav"),
+            Map.entry("ogg", "audio/ogg"),
+            Map.entry("mp4", "video/mp4"),
             Map.entry("webm", "video/webm"),
-            Map.entry("mkv",  "video/x-matroska"),
-            Map.entry("mov",  "video/quicktime"),
-            Map.entry("avi",  "video/x-msvideo"),
-            Map.entry("pdf",  "application/pdf"),
-            Map.entry("zip",  "application/zip"),
-            Map.entry("txt",  "text/plain"),
+            Map.entry("avi", "video/x-msvideo"),
+            Map.entry("mkv", "video/x-matroska"),
+            Map.entry("mov", "video/quicktime"),
+            Map.entry("pdf", "application/pdf"),
+            Map.entry("zip", "application/zip"),
+            Map.entry("txt", "text/plain"),
             Map.entry("html", "text/html"),
-            Map.entry("css",  "text/css"),
-            Map.entry("js",   "application/javascript"),
+            Map.entry("css", "text/css"),
+            Map.entry("js", "application/javascript"),
             Map.entry("json", "application/json"),
-            Map.entry("xml",  "application/xml")
+            Map.entry("xml", "application/xml")
     );
-
-    private ApiUtil() {}
 
     public static String jsonError(String message) {
         return GSON.toJson(Map.of("error", message));
