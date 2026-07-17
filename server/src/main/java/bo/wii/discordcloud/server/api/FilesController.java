@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -116,6 +117,10 @@ public class FilesController {
         } catch (IOException e) {
             Logger.error(FilesController.class, "Failed to list directory: " + e.getMessage());
         }
+
+        // directories first, then alphabetical by name
+        entries.sort(Comparator.comparing((FileInfoDto e) -> !e.isDirectory)
+                        .thenComparing(e -> e.name.toLowerCase()));
 
         ctx.contentType("application/json").result(GSON.toJson(entries));
     }
