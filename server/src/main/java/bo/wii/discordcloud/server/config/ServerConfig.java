@@ -58,7 +58,7 @@ public class ServerConfig {
         webhook = config.getString("webhook", "");
         botToken = config.getString("botToken", "");
         channelId = config.getString("channelId", "");
-        uploadChunkSizeMb = config.getInt("uploadChunkSizeMb", 10);
+        uploadChunkSizeMb = config.getInt("uploadChunkSizeMb", 20);
         prefetchEnabled = config.getBoolean("prefetch", true);
         requireToken = config.getBoolean("requireToken", false);
         sessionDurationSeconds = config.getInt("sessionDurationSeconds", 43200);
@@ -101,10 +101,13 @@ public class ServerConfig {
                 "Required when uploading files using the BOT method.",
                 "Enable Developer Mode in Discord, right-click channel -> Copy ID"));
 
-        config.set("uploadChunkSizeMb", 10);
+        config.set("uploadChunkSizeMb", 20);
         config.setComments("uploadChunkSizeMb", Arrays.asList("", "Default chunk size in MB used for bot-mode uploads via the web interface.",
                 "Does not apply to webhook uploads.",
-                "Default: 10"));
+                "Free/Non-Nitro: 20 MB",
+                "Server Boost Level 2: 50 MB",
+                "Server Boost Level 3: 100 MB",
+                "Default: 20"));
 
         config.set("prefetch", true);
         config.setComments("prefetch", Arrays.asList("", "Enable part prefetching for faster sequential streaming.", "Default: true"));

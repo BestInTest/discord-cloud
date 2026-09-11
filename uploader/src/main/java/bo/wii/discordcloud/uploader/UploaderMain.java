@@ -143,7 +143,7 @@ public class UploaderMain {
 
         if (mode == UploadMode.WEBHOOK) {
             // Webhook mode (default)
-            int chunkSize = chunkSizeOverride != null ? chunkSizeOverride : configuration.getChunkSize();
+            int chunkSize = chunkSizeOverride != null ? chunkSizeOverride : DiscordCloudCore.CHUNK_FILE_SIZE;
             String webhook = webhookOverride != null ? webhookOverride : configuration.getWebhook();
 
             if (webhook == null || webhook.isEmpty() || webhook.equals("your_webhook")) {
@@ -239,7 +239,7 @@ public class UploaderMain {
         System.out.println("  -h, --help                 Show this help message");
         System.out.println();
         System.out.println("Chunk sizes based on Discord limits:");
-        System.out.println("  Free/Non-Nitro: 10 MB");
+        System.out.println("  Free/Non-Nitro: 20 MB");
         System.out.println("  Server Boost Level 2: 50 MB");
         System.out.println("  Server Boost Level 3: 100 MB");
         System.out.println();

@@ -5,7 +5,6 @@ import bo.wii.discordcloud.core.Logger;
 import bo.wii.discordcloud.core.structure.enums.UploadType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import bo.wii.discordcloud.core.DiscordCloudCore;
 import bo.wii.discordcloud.core.structure.ChunkFileInfo;
 import bo.wii.discordcloud.core.structure.FileStruct;
 
@@ -35,7 +34,7 @@ public class FileHelper {
     // First chunk should have partNumber = 0
     public static File getFilePart(String filePath, int partNumber, long chunkSize) throws IOException {
 
-        long maxParts = calculateMaxPartCount(filePath, DiscordCloudCore.CHUNK_FILE_SIZE);
+        long maxParts = calculateMaxPartCount(filePath, chunkSize);
         if (partNumber < 0 || partNumber >= maxParts) {
             throw new IndexOutOfBoundsException("Provided part number (" + partNumber + ") is out of file range (0-" + (maxParts-1) + ")");
         }
