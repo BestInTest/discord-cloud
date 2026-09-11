@@ -419,7 +419,16 @@ public class SettingsView extends VBox {
         hashBox.setSelected(conf.isCheckPartHash());
         hashBox.setOnAction(e -> conf.setCheckPartHash(hashBox.isSelected()));
 
-        section.getChildren().addAll(title, prefetchBox, clearTempBox, hashBox);
+        // Chunk size for bot-mode uploads
+        Label chunkLabel = new Label("Bot chunk size (MB):");
+        Spinner<Integer> chunkSpinner = new Spinner<>(1, 500, conf.getChunkSizeMb());
+        chunkSpinner.setEditable(true);
+        chunkSpinner.setPrefWidth(100);
+        chunkSpinner.valueProperty().addListener((obs, oldVal, newVal) -> conf.setChunkSizeMb(newVal));
+        HBox chunkRow = new HBox(10, chunkLabel, chunkSpinner);
+        chunkRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        section.getChildren().addAll(title, prefetchBox, clearTempBox, hashBox, chunkRow);
         return section;
     }
 

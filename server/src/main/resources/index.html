@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiscordCloud</title>
+    <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+
+    <div id="login-overlay" class="hidden">
+        <div class="login-card">
+            <div class="login-logo">Discord Cloud</div>
+            <form id="login-form" novalidate>
+                <input type="password" id="token-input" placeholder="Access token" autocomplete="current-password">
+                <p id="login-error" class="error-msg hidden"></p>
+                <button type="submit" id="login-btn">Sign in</button>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="app" class="hidden">
+        <header class="topbar">
+            <span class="topbar-logo">Discord Cloud</span>
+            <div class="topbar-actions">
+                    <button id="new-folder-btn" class="btn-new-folder" title="New folder">
+                        <span id="new-folder-btn-icon"></span>
+                        New folder
+                    </button>
+                    <button id="upload-btn" class="btn-upload" title="Upload file">
+                        <span id="upload-btn-icon"></span>
+                        Upload file
+                    </button>
+                    <button id="logout-btn" class="btn-ghost">Sign out</button>
+                </div>
+        </header>
+
+        <nav id="breadcrumb"></nav>
+
+        <main class="content">
+            <div id="browser"></div>
+        </main>
+    </div>
+
+    <input type="file" id="file-input" style="display:none">
+
+    <div id="upload-overlay" class="modal-overlay hidden">
+        <div class="upload-modal">
+
+            <div id="upload-confirm-panel">
+                <div class="modal-header">
+                    <h3 class="modal-title">Upload file</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="upload-info-row">
+                        <span class="upload-info-label">File:</span>
+                        <span id="confirm-file-name" class="upload-info-value"></span>
+                    </div>
+                    <div class="upload-info-row">
+                        <span class="upload-info-label">Location:</span>
+                        <span id="confirm-dest-path" class="upload-info-value"></span>
+                    </div>
+                    <div class="upload-method-section">
+                        <span class="upload-info-label">Method:</span>
+                        <div class="method-options" id="method-options">
+                            <label class="method-radio hidden" id="label-webhook">
+                                <input type="radio" name="upload-method" value="WEBHOOK" id="radio-webhook">
+                                <span class="method-name">Webhook</span>
+                            </label>
+                            <label class="method-radio hidden" id="label-bot">
+                                <input type="radio" name="upload-method" value="BOT" id="radio-bot">
+                                <span class="method-name">Bot Token</span>
+                            </label>
+                        </div>
+                        <p id="no-method-msg" class="error-msg hidden">No upload method configured on the server.</p>
+                    </div>
+                    <div id="chunk-size-section" class="upload-info-row hidden">
+                        <span class="upload-info-label">Chunk size:</span>
+                        <div class="chunk-size-wrap">
+                            <input type="number" id="chunk-size-input" class="chunk-size-input" min="1" max="500" step="1" value="10">
+                            <span class="chunk-size-unit">MB</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirm-cancel-btn" class="btn-ghost">Cancel</button>
+                    <button id="confirm-upload-btn" class="btn-accent">Upload</button>
+                </div>
+            </div>
+
+            <div id="upload-progress-panel" class="hidden">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="progress-title">Uploading...</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="upload-info-row">
+                        <span class="upload-info-label">File:</span>
+                        <span id="progress-file-name" class="upload-info-value"></span>
+                    </div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-track">
+                            <div id="progress-bar-fill" class="progress-bar-fill" style="width:0%"></div>
+                        </div>
+                        <span id="progress-text" class="progress-text">Waiting...</span>
+                    </div>
+                    <div id="upload-log" class="upload-log"></div>
+                </div>
+                <div class="modal-footer">
+                    <button id="progress-close-btn" class="btn-accent" disabled>Close</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="folder-modal-overlay" class="modal-overlay hidden">
+        <div class="upload-modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="folder-modal-title">New folder</h3>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="folder-name-input" class="modal-text-input"
+                       placeholder="Folder name" maxlength="255" autocomplete="off" spellcheck="false">
+                <p id="folder-modal-error" class="error-msg hidden"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="folder-cancel-btn" class="btn-ghost">Cancel</button>
+                <button id="folder-confirm-btn" class="btn-accent">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

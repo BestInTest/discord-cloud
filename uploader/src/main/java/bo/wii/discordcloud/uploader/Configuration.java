@@ -35,7 +35,7 @@ public class Configuration {
         webhook = config.getString("webhook", "your_webhook");
         botToken = config.getString("bot-token", "");
         channelId = config.getString("channel-id", ""); // kanał na który mają być wysyłane pliki przez bota
-        chunkSize = config.getInt("chunk-size-mb", 10) * DiscordCloudCore.MB_SCALAR;
+        chunkSize = config.getInt("chunk-size-mb", 20) * DiscordCloudCore.MB_SCALAR;
     }
 
     private void createNewConfig(File f) {
@@ -61,11 +61,12 @@ public class Configuration {
                 "Bot should have access to this channel.",
                 "To get channel ID: Enable Developer Mode in Discord, right-click channel -> Copy ID"));
 
-        config.set("chunk-size-mb", 10);
+        // TODO: może rozdzielić na 2 wartości? Jedna dla bota, druga dla webhooka. Tylko wtedy trzeba przeanalizować flow i użycie DiscordCloudCore.CHUNK_FILE_SIZE
+        config.set("chunk-size-mb", 20);
         config.setComments("chunk-size-mb", Arrays.asList(
                 "",
                 "Size of each file chunk in MB (used in bot mode).",
-                "Free/Non-Nitro: 10 MB",
+                "Free/Non-Nitro: 20 MB",
                 "Server Boost Level 2: 50 MB",
                 "Server Boost Level 3: 100 MB"));
 

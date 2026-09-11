@@ -10,6 +10,6 @@ public class DiscordCloudCore {
      */
     public static final int MB_SCALAR = 1024 * 1023; // ~1 MB
 
-    public static final int CHUNK_FILE_SIZE = 10 * MB_SCALAR; // 10 MB
+    public static final int CHUNK_FILE_SIZE = 20 * MB_SCALAR; // 20 MB
     public static final ThumbnailService thumbnailService = new ThumbnailService(DiscordCloudCore.class);
 }

@@ -23,7 +23,7 @@ Store and share files using Discord.
 You can also use the modules from the command line.
 
 ```bash
-java -jar uploader-2.0.jar
+java -jar uploader-2.1.jar
 ```
 
 In general, modules can be started with:

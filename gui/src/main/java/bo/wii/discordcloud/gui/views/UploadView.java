@@ -480,7 +480,7 @@ public class UploadView extends VBox {
                 return;
             }
             uploadBotTask = new UploadBotTask(selectedFile, bp.getToken(), bp.getChannelId(),
-                    DiscordCloudCore.CHUNK_FILE_SIZE, callback);
+                    conf.getChunkSizeMb() * DiscordCloudCore.MB_SCALAR, callback);
             if (selectedThumbnailResolution != null) {
                 uploadBotTask.setThumbnailResolution(selectedThumbnailResolution);
                 uploadBotTask.setThumbnailQuality(selectedThumbnailQuality);

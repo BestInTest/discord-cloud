@@ -18,6 +18,7 @@ public class Configuration {
     private boolean clearTemp;
     private boolean prefetchEnabled;
     private boolean checkPartHash;
+    private int chunkSizeMb;
 
     // Active profile
     private String selectedWebhook;
@@ -66,6 +67,7 @@ public class Configuration {
         this.clearTemp = config.getBoolean("clear-temp", true);
         this.prefetchEnabled = config.getBoolean("prefetch", true);
         this.checkPartHash = config.getBoolean("check-part-hash", false);
+        this.chunkSizeMb = config.getInt("chunk-size-mb", 20);
         this.selectedWebhook = config.getString("selected-webhook", "default");
 
         // Load profiles
@@ -85,6 +87,7 @@ public class Configuration {
         config.set("clear-temp", true);
         config.set("prefetch", true);
         config.set("check-part-hash", false);
+        config.set("chunk-size-mb", 20);
         config.set("selected-webhook", "default");
         config.createSection("webhooks", getDefaultWebhookMap());
         config.createSection("bots");
@@ -105,6 +108,7 @@ public class Configuration {
         config.set("clear-temp", clearTemp);
         config.set("prefetch", prefetchEnabled);
         config.set("check-part-hash", checkPartHash);
+        config.set("chunk-size-mb", chunkSizeMb);
         config.set("selected-webhook", selectedWebhook);
 
         // Save webhooks
@@ -137,6 +141,12 @@ public class Configuration {
                 "This ensures data integrity but may slow down the download slightly.",
                 "Full file hash is still verified after all parts are downloaded.",
                 "Default: false"));
+        config.setComments("chunk-size-mb", Arrays.asList("", "Chunk size in MB for bot-mode uploads.",
+                "Webhook uploads always use the built-in default (20 MB).",
+                "Free/Non-Nitro: 20 MB",
+                "Server Boost Level 2: 50 MB",
+                "Server Boost Level 3: 100 MB",
+                "Default: 20"));
         config.setComments("selected-webhook", Arrays.asList("", "The name of the currently selected webhook.",
                 "Must be one configured in the 'webhooks' section."));
         config.setComments("webhooks", Arrays.asList("", "Webhook config (name: url).",
@@ -319,6 +329,15 @@ public class Configuration {
      */
     public void setCheckPartHash(boolean checkPartHash) {
         this.checkPartHash = checkPartHash;
+        saveConfiguration();
+    }
+
+    public int getChunkSizeMb() {
+        return chunkSizeMb;
+    }
+
+    public void setChunkSizeMb(int chunkSizeMb) {
+        this.chunkSizeMb = chunkSizeMb > 0 ? chunkSizeMb : 20;
         saveConfiguration();
     }
 }

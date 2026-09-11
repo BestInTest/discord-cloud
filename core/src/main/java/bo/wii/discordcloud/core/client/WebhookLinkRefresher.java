@@ -20,6 +20,7 @@ public class WebhookLinkRefresher implements LinkRefresher {
     private final OkHttpClient client;
     
     public WebhookLinkRefresher(String webhookUrl) {
+        //TODO: walidacja webhooka regexem?
         this.webhookUrl = webhookUrl;
         this.client = new OkHttpClient();
     }

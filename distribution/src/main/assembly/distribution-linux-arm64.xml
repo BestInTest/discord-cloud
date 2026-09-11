@@ -30,6 +30,7 @@
                 <include>bo.wii.discordcloud:downloader</include>
                 <include>bo.wii.discordcloud:uploader</include>
                 <include>bo.wii.discordcloud:deleter</include>
+                <include>bo.wii.discordcloud:server</include>
                 <include>bo.wii.discordcloud:cli-renderer</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}-${artifact.version}.${artifact.extension}</outputFileNameMapping>
